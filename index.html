@@ -1062,6 +1062,20 @@ function aiMemory(){
   if(recent.length) m+='RECENT DAYS: '+recent.join(' | ')+'\n';
   if(meta.read.length) m+='CHAPTERS KOKO HAS LIVED, in order: '+meta.read.map(chronTitle).join(' -> ')+'\n';
   if(canon.length) m+='PERSONALIZED SCENE NOTES (things that canonically happened): '+canon.map(c=>c.t+': '+c.note).join(' | ')+'\n';
+  // ambient continuity: the narrator rereads its own last 3 days of output,
+  // so yesterday's paranoia, directives and noises can carry into today
+  let amb='';
+  for(let i=1;i<=3;i++){
+    try{
+      const b=JSON.parse(localStorage.getItem('ksd_ai_'+keyOffset(i)));
+      if(b && b.directive){
+        amb+=keyOffset(i)+' — card: "'+(b.directive.label||'')+' '+(b.directive.text||'')+'"';
+        if(Array.isArray(b.whispers)&&b.whispers.length) amb+='; whispers: "'+b.whispers.slice(0,2).join('" / "')+'"';
+        amb+=' | ';
+      }
+    }catch(e){}
+  }
+  if(amb) m+='YOUR OWN RECENT NARRATION (the last days\' ambient texts — treat them as things that happened; continue open threads and make callbacks where natural: Rook remembers what he noticed, Katie follows up on her directives, sounds heard in the dark are heard again, closer): '+amb+'\n';
   return m;
 }
 function aiReady(){ return !!(meta.cfg.aiKey) && meta.booted && navigator.onLine; }
@@ -1101,12 +1115,14 @@ async function generateBundle(s, sig){
       +'{"sparky":{"stable":[3 strings],"uneasy":[3 strings],"degraded":[3 strings],"critical":[3 strings]},'
       +'"directive":{"label":"short ▸-prefixed card header matching the requested voice","text":"the card body, 1-2 sentences"},'
       +'"whispers":[5 lowercase horror lines, each either a SPARKY⟩ transmission or impersonal station-system text]}. '
-      +'Sparky arrays are third-person narrations of his beeps/behavior reacting to that signal tier and to the player\'s actual goals above.');
+      +'Sparky arrays are third-person narrations of his beeps/behavior reacting to that signal tier and to the player\'s actual goals above. '
+      +'If YOUR OWN RECENT NARRATION opened a thread — something Rook noticed, a directive Katie issued, a sound in the walls — continue it or pay it off today where it fits naturally. Threads may span days.');
     if(b && b.sparky && TIER_KEYS.every(k=>Array.isArray(b.sparky[k])&&b.sparky[k].length)){
       localStorage.setItem('ksd_ai_'+todayKey(), JSON.stringify(b));
       document.getElementById('ai-status').textContent='◈ uplink live — today\'s narration is dynamic';
       render();
       maybeCompactSaga(buildChronicle());   // fold old days into long-term memory when due
+      for(let i=14;i<=60;i++) localStorage.removeItem('ksd_ai_'+keyOffset(i));   // tidy old bundles
     }
   }catch(e){ document.getElementById('ai-status').textContent='uplink failed ('+e.message+') — using archived narration'; }
   aiBusy=false;
