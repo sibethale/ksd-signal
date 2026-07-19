@@ -493,6 +493,7 @@
         <div class="chart-title">Signal integrity trend</div>
         <div class="bars-row" id="bars-signal"></div>
       </div>
+      <div id="strain-wrap"></div>
       <div class="section-head">Commendations</div>
       <div class="ach-grid" id="ach-grid"></div>
     </div>
@@ -518,6 +519,19 @@
       <div class="sys-row">
         <div><div class="sys-label">Horror effects</div><div class="sys-sub">interface degradation when signal drops</div></div>
         <input type="checkbox" id="cfg-horror" checked onchange="saveCfg()" style="width:20px;height:20px;accent-color:#3ee6c1;">
+      </div>
+      <div class="sys-row" style="flex-direction:column;align-items:stretch;gap:9px;">
+        <div>
+          <div class="sys-label">Tracker uplink — Fitbit</div>
+          <div class="sys-sub">register a free app at dev.fitbit.com (type: Personal, OAuth type: Client, redirect URL = this page's address, scopes: activity + sleep), then paste the Client ID and connect. active minutes fill the exertion ring; sleep powers the strain ledger.</div>
+        </div>
+        <input class="modal-input" style="margin:0;" type="text" id="cfg-fbid" placeholder="Fitbit Client ID (e.g. 23ABCD)" onchange="saveCfg()">
+        <div style="display:flex;gap:8px;">
+          <button class="chip" style="flex:1;text-align:center;" onclick="fbConnect()">⌚ CONNECT</button>
+          <button class="chip" style="flex:1;text-align:center;" onclick="fbSync(true)">⟲ SYNC NOW</button>
+          <button class="chip" style="flex:1;text-align:center;" onclick="fbDisconnect()">✕ DISCONNECT</button>
+        </div>
+        <div class="sys-sub" id="fb-status"></div>
       </div>
       <div class="sys-row" style="flex-direction:column;align-items:stretch;gap:9px;">
         <div>
@@ -638,12 +652,14 @@ const FORECAST=[
    desc:'Hard training nearly daily or heavy physical labour — 60+ min sessions, cargo work, construction pace. Often 12,000+ steps plus intense sessions.'},
 ];
 function kcalLimit(d){ return (d && d.forecast!=null) ? FORECAST[d.forecast].kcal : meta.cfg.kcal; }
-/* what activity level the logged exertion actually proves (floors -> lower category when in between) */
-function achievedLvl(d){ const m=d.move||0; return m>=75?3 : m>=40?2 : m>=20?1 : 0; }
+/* effective exertion: the larger of manual logging and tracker-measured active minutes */
+function effMove(d){ return Math.max(d.move||0, d.fbMove||0); }
+/* what activity level the exertion actually proves (floors -> lower category when in between) */
+function achievedLvl(d){ const m=effMove(d); return m>=75?3 : m>=40?2 : m>=20?1 : 0; }
 
 /* goal checks: day object -> booleans */
 function goalKcal(d){ const L=kcalLimit(d); return d.kcal >= L*0.6 && d.kcal <= L*1.1; }
-function goalMove(d){ return d.move >= meta.cfg.move; }
+function goalMove(d){ return effMove(d) >= meta.cfg.move; }
 function goalMind(d){ return d.mood > 0; }
 function goalsMet(d){ return (goalKcal(d)?1:0)+(goalMove(d)?1:0)+(goalMind(d)?1:0); }
 
@@ -1263,6 +1279,78 @@ function playMoment(title, scene){
   vnNext();
 }
 
+/* ═══════════════ STRAIN — Sparky's worry ledger ═══════════════
+   Rolling 14-day meters derived from all logs. Worry, not judgment:
+   they feed the narrator and fire supportive events — never the signal. */
+function computeStrains(){
+  let W=0, n=0,o=0,u=0,b=0,f=0, sleepSeen=false, heavyRun=0, maxHeavy=0;
+  for(let i=0;i<14;i++){
+    const d=i===0?today:loadDay(keyOffset(i));
+    const w=14-i; W+=w;
+    const L=kcalLimit(d);
+    const anxious=(Array.isArray(d.moments)&&d.moments.includes('THE PROTOCOL'))
+      || /anxi|worri|scared|afraid|panic|nervous|stress|overwhelm/i.test(d.journal||'')
+      || (d.mood>0&&d.mood<=2);
+    if(anxious)n+=w;
+    if(d.kcal>L*1.1)o+=w;
+    if(d.kcal>0&&d.kcal<L*0.6)u+=w;
+    if(d.sleepMin){ sleepSeen=true; if(d.sleepMin<360)b+=w; }
+    if(effMove(d)>=60){ heavyRun++; maxHeavy=Math.max(maxHeavy,heavyRun); } else heavyRun=0;
+    if(d.forecast!=null && d.forecast-achievedLvl(d)>0)f+=w;
+  }
+  if(maxHeavy>=5) b+=Math.min(25, maxHeavy*4);   // overtraining fallback when no sleep data
+  const pct=x=>Math.min(100, Math.round(x/W*220));
+  return {nerves:pct(n), over:pct(o), under:pct(u), burnout:pct(b), manifests:pct(f), sleepSeen};
+}
+function strainLevel(v){ return v>=55?2:(v>=25?1:0); }
+const S_NERVES=[
+  ['narr','The worry ledger crosses a line Sparky drew for himself weeks ago. Too many anxious days, too close together.'],
+  ['narr','He escalates, his way: the protocol now runs preemptively at night cycle, unasked. The nest light goes to ember before she reaches for it. Four counts, hold, four counts.'],
+  ['koko','You\'re keeping a file on me, bug.'],
+  ['narr','Two soft chimes. Of course he is. It\'s his favorite file. He would like it to be thinner.'],
+];
+const S_OVER=[
+  ['narr','A pattern in the ration logs, days deep now. Nobody says the word. Chen simply starts building her usual bowl with more broth and fewer dumplings, unprompted, unremarked.'],
+  ['koko','...Chen. Did my order change?'],
+  ['other','[Chen] Orders drift. Currents drift. Eat your soup.'],
+  ['narr','Sparky, under the counter, plays no tone at all — which for him is tact. The station takes care of its own, sideways.'],
+];
+const S_UNDER=[
+  ['narr','The ration logs have been running thin for days, and the station has noticed the way stations notice: quietly, at the edges.'],
+  ['narr','A wax-paper parcel waits at the vent mouth. Dumplings. Still warm. No note — there is never a note — but the fold in the paper is administrative-grade.'],
+  ['koko','I\'m fine. I\'ve just been busy. Sparky, tell the vent I\'m FINE.'],
+  ['narr','One click: message declined. He nudges the parcel closer with two legs and waits. He can wait all night. She eats.'],
+];
+const S_BURN=[
+  ['narr','The body\'s ledger is deep in the red — short nights, heavy shifts, no slack in the line. Sparky runs the numbers twice, then does something unprecedented: he closes the toolbox. And sits on it.'],
+  ['koko','Bug. Move.'],
+  ['narr','A long, level buzz. MANDATORY NOTHING, says the posture of a very small drone on a very locked toolbox. Tonight the station can fix itself.'],
+  ['koko','...One evening. ONE. And you\'re off the toolbox tomorrow.'],
+];
+const S_FALSE=[
+  ['narr','The forecast ledger and the exertion ledger have been telling different stories for days, and the gap has a shape the audit drones can see from orbit.'],
+  ['narr','Sparky projects both ledgers on the nest wall, side by side, and says nothing. The numbers do the talking. The numbers are not kind.'],
+  ['koko','Okay. OKAY. Tomorrow I file honest or I file Inactive. Take it down.'],
+  ['narr','He takes it down. He leaves the ghost of it, faintly, one more second, for emphasis. Katie would be proud. Katie must never know.'],
+];
+let lastStrains=null;
+function checkStrainEvents(st){
+  const map={nerves:['NERVES',S_NERVES], over:['RATION DRIFT ▲',S_OVER], under:['RATION DRIFT ▼',S_UNDER], burnout:['BURNOUT',S_BURN], manifests:['FALSE MANIFESTS',S_FALSE]};
+  meta.strainLvls=meta.strainLvls||{};
+  let fired=false;
+  for(const k in map){
+    const lvl=strainLevel(st[k]), old=meta.strainLvls[k]||0;
+    if(lvl===2 && old<2 && meta.booted && !fired){
+      fired=true;   // at most one strain event per render
+      (today.moments=today.moments||[]).push('STRAIN HIGH: '+map[k][0]);
+      today.moments=today.moments.slice(-8); saveDay(todayKey(), today);
+      setTimeout(()=>playMoment('STRAIN — '+map[k][0], map[k][1]), 700);
+    }
+    meta.strainLvls[k]=lvl;
+  }
+  saveMeta(meta);
+}
+
 /* ═══════════════ ACHIEVEMENTS ═══════════════ */
 const ACH=[
   {id:'first',   icon:'📡', name:'First Transmission', cond:'log anything once', test:s=>s.any},
@@ -1277,6 +1365,65 @@ const ACH=[
   {id:'journal7', icon:'📓', name:'Dear Diary', cond:'7 journal entries', test:s=>s.jDays>=7},
   {id:'journal18',icon:'💚', name:'Tuesday Person', cond:'18 journal entries', test:s=>s.jDays>=18},
 ];
+
+/* ═══════════════ TRACKER UPLINK (Fitbit) ═══════════════
+   OAuth implicit grant (same approach as QuestCut): token lives in the URL
+   fragment on return, then in localStorage. Sync fills fbMove/steps/sleepMin. */
+function fbToken(){ try{ return JSON.parse(localStorage.getItem('ksd_fitbit')); }catch(e){ return null; } }
+function fbConnect(){
+  const id=(meta.cfg.fbId||'').trim();
+  if(!id){ showToast('Paste your Fitbit Client ID first'); return; }
+  if(!location.protocol.startsWith('http')){ showToast('Connect from the hosted app, not a local file'); return; }
+  const ru=location.origin+location.pathname;
+  location.href='https://www.fitbit.com/oauth2/authorize?response_type=token'
+    +'&client_id='+encodeURIComponent(id)
+    +'&redirect_uri='+encodeURIComponent(ru)
+    +'&scope=activity%20sleep&expires_in=31536000';
+}
+function fbExtract(){
+  if(!location.hash.includes('access_token=')) return;
+  const p=new URLSearchParams(location.hash.slice(1));
+  const t=p.get('access_token');
+  if(t){
+    localStorage.setItem('ksd_fitbit', JSON.stringify({token:t, ts:Date.now()}));
+    history.replaceState(null,'',location.pathname+location.search);
+    setTimeout(()=>showToast('⌚ Tracker uplink connected'), 800);
+  }
+}
+function fbDisconnect(){ localStorage.removeItem('ksd_fitbit'); delete meta.fbLast; saveMeta(meta); fbStatus(); showToast('Tracker disconnected'); }
+function fbStatus(msg){
+  const el=document.getElementById('fb-status'); if(!el) return;
+  if(msg){ el.textContent=msg; return; }
+  el.textContent = fbToken() ? '⌚ connected — syncs on open, once an hour' : (meta.cfg.fbId?'key stored — tap connect to authorize':'');
+}
+async function fbFetch(path){
+  const t=fbToken(); if(!t) throw new Error('no token');
+  const r=await fetch('https://api.fitbit.com'+path,{headers:{Authorization:'Bearer '+t.token}});
+  if(r.status===401){ localStorage.removeItem('ksd_fitbit'); throw new Error('token expired'); }
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+async function fbSync(force){
+  if(!fbToken() || !navigator.onLine) return;
+  if(!force && meta.fbLast && Date.now()-meta.fbLast<3600e3) return;
+  meta.fbLast=Date.now(); saveMeta(meta);
+  try{
+    for(const i of [0,1]){                       // today + yesterday (backfill)
+      const k=keyOffset(i);
+      const act=await fbFetch('/1/user/-/activities/date/'+k+'.json');
+      const slp=await fbFetch('/1.2/user/-/sleep/date/'+k+'.json');
+      const d=loadDay(k);
+      d.fbMove=(act.summary.fairlyActiveMinutes||0)+(act.summary.veryActiveMinutes||0);
+      d.steps=act.summary.steps||0;
+      if(slp.summary && slp.summary.totalMinutesAsleep>0) d.sleepMin=slp.summary.totalMinutesAsleep;
+      saveDay(k,d);
+    }
+    today=loadDay(todayKey());
+    fbStatus('⌚ synced — today: '+(today.fbMove||0)+' active min, '+(today.steps||0)+' steps'
+      +(today.sleepMin?(', '+(Math.round(today.sleepMin/6)/10)+'h sleep'):''));
+    render();
+  }catch(e){ fbStatus('tracker sync failed ('+e.message+')'+(e.message==='token expired'?' — reconnect':'')); }
+}
 
 /* ═══════════════ NARRATOR UPLINK (Gemini free tier) ═══════════════
    One JSON bundle per day (Sparky lines per tier, directive card, whispers),
@@ -1301,6 +1448,7 @@ function buildChronicle(){
     if(d.careSkin&&d.careTeeth) l+=', care routine done';
     if(d.forecast!=null && d.forecast-achievedLvl(d)>0) l+=', OVERCLAIMED forecast';
     if(Array.isArray(d.moments)&&d.moments.length) l+=', moments: '+d.moments.join('/');
+    if(d.sleepMin) l+=', slept '+(Math.round(d.sleepMin/6)/10)+'h';
     if((d.journal||'').trim()) l+=', journal: "'+d.journal.trim().slice(0,80)+'"';
     lines.push(l);
   }
@@ -1370,6 +1518,12 @@ function aiContext(s, sig){
     +'Yesterday: eating goal '+(goalKcal(y)?'met':'missed')+', exercise '+(goalMove(y)?'met':'missed')+', psych eval '+(goalMind(y)?'done':'skipped')+'. '
     +'Today so far: '+today.kcal+' kcal, '+today.move+' min exertion, psych eval '+(today.mood>0?'done':'not yet')+'. '
     +(Array.isArray(today.moments)&&today.moments.length?('Moments Koko already lived today (small scenes that happened — reference them where natural): '+today.moments.join(', ')+'. '):'')
+    +(function(){ const st=lastStrains||computeStrains(); const L=v=>['low','elevated','HIGH'][strainLevel(v)];
+      return 'Strain ledger (14-day rolling — chronic patterns; respond with care, never shame): nerves '+L(st.nerves)
+        +', overeating '+L(st.over)+', undereating '+L(st.under)
+        +', burnout '+(st.sleepSeen?L(st.burnout):'unknown (no sleep data)')
+        +', forecast honesty '+L(st.manifests)
+        +(today.sleepMin?('. Last night\'s sleep: '+(Math.round(today.sleepMin/6)/10)+'h'):'')+'. '; })()
     +'Rook '+(s.rookDays>0?'has noticed things going missing from his hold and is suspicious':'has no idea Koko watches him from the vents and pilfers his cargo')+'. '
     +'Gary\'s cutter is '+(s.garyDocked?'docked at bay nine':'away on a skip-trace')+'. Journal days: '+s.jDays+'. '
     +(j?('Koko\'s latest journal line (weave it in subtly where fitting): "'+j.slice(0,200)+'". '):'')
@@ -1582,14 +1736,14 @@ function render(){
 
   // rings
   ringSet('ring-kcal', today.kcal/L);
-  ringSet('ring-move', today.move/meta.cfg.move);
+  ringSet('ring-move', effMove(today)/meta.cfg.move);
   ringSet('ring-mind', today.mood>0?1:0);
   const vk=document.getElementById('val-kcal');
   vk.textContent = today.kcal;
   vk.style.color = today.kcal > L*1.1 ? 'var(--danger)' : 'var(--teal)';
   document.getElementById('sub-kcal').textContent = '/ '+L+' kcal'+(today.forecast!=null?' · '+FORECAST[today.forecast].name:'');
-  document.getElementById('val-move').textContent = today.move+'m';
-  document.getElementById('sub-move').textContent = '/ '+meta.cfg.move+' min';
+  document.getElementById('val-move').textContent = effMove(today)+'m';
+  document.getElementById('sub-move').textContent = '/ '+meta.cfg.move+' min'+((today.fbMove||0)>(today.move||0)?' ⌚':'');
   document.getElementById('val-mind').textContent = today.mood>0?['','🌑','🌘','🌗','🌔','🌕'][today.mood]:'—';
   setMet('met-kcal', goalKcal(today)); setMet('met-move', goalMove(today)); setMet('met-mind', goalMind(today));
 
@@ -1606,6 +1760,8 @@ function render(){
   // narrator uplink: fetch today's bundle once per day, in the background
   if(aiReady() && !bundle && !aiBusy) generateBundle(s0, sig);
 
+  lastStrains=computeStrains();
+  checkStrainEvents(lastStrains);
   renderChapters(s0); renderCrew(s0); renderRecords(s0, sig);
   checkAch(s0);
 }
@@ -1760,6 +1916,26 @@ function renderRecords(s, sig){
     sgb+=`<div class="bar-col"><div class="bar" style="height:${v==null?4:Math.max(6,v)}%;background:${col}"></div><div class="bar-day">${'SMTWTFS'[day.getDay()]}</div></div>`;
   }
   document.getElementById('bars-signal').innerHTML=sgb;
+  // strain — Sparky's worry ledger
+  const st = lastStrains || computeStrains();
+  const scol=v=>strainLevel(v)===2?'var(--danger)':strainLevel(v)===1?'var(--amber)':'var(--teal-dim)';
+  const srows=[
+    ['NERVES', st.nerves, 'anxious journals & heavy evals'],
+    ['RATION DRIFT ▲', st.over, 'eating past the filed limit'],
+    ['RATION DRIFT ▼', st.under, 'running on fumes'],
+    ['BURNOUT', st.burnout, st.sleepSeen?'short sleep, no recovery days':'no sleep data — connect a tracker in System'],
+    ['FALSE MANIFESTS', st.manifests, 'forecasts vs what actually happened'],
+  ];
+  document.getElementById('strain-wrap').innerHTML =
+    '<div class="chart-card"><div class="chart-title">Strain — Sparky\'s worry ledger (14 cycles)</div>'
+    + srows.map(r=>`<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:1.5px;">
+          <span>${r[0]}</span><span style="color:${scol(r[1])}">${['LOW','ELEVATED','HIGH'][strainLevel(r[1])]}</span>
+        </div>
+        <div class="crew-bond-wrap"><div class="crew-bond" style="width:${r[1]}%;background:${scol(r[1])}"></div></div>
+        <div class="crew-hint">${r[2]}</div>
+      </div>`).join('')
+    + '<div class="crew-hint" style="margin-top:4px;">strain is worry, not judgment — it fades as good days stack</div></div>';
   document.getElementById('ach-grid').innerHTML = ACH.map(a=>{
     const un=meta.ach.includes(a.id);
     return `<div class="ach-card ${un?'unlocked':'locked'}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-cond">${a.cond}</div></div>`;
@@ -1876,7 +2052,8 @@ function saveCfg(){
   meta.cfg.move=Math.max(5,+document.getElementById('cfg-move').value||30);
   meta.cfg.horror=document.getElementById('cfg-horror').checked;
   meta.cfg.aiKey=document.getElementById('cfg-aikey').value.trim();
-  saveMeta(meta); render(); showToast('⚙ Configuration saved');
+  meta.cfg.fbId=document.getElementById('cfg-fbid').value.trim();
+  saveMeta(meta); fbStatus(); render(); showToast('⚙ Configuration saved');
 }
 /* testing helper: shift ALL dated records one day into the past, so "today"
    starts fresh — a simulated night-cycle without waiting for midnight */
@@ -1960,6 +2137,8 @@ document.getElementById('cfg-move').value=meta.cfg.move;
 document.getElementById('cfg-horror').checked=meta.cfg.horror;
 document.getElementById('cfg-aikey').value=meta.cfg.aiKey||'';
 if(meta.cfg.aiKey) document.getElementById('ai-status').textContent='◈ key stored — narration goes dynamic each new cycle';
+document.getElementById('cfg-fbid').value=meta.cfg.fbId||'';
+fbExtract(); fbStatus(); fbSync();
 if(meta.booted){ document.getElementById('boot').classList.add('hidden'); render(); }
 else runBoot();
 </script>
