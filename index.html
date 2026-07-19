@@ -1056,7 +1056,9 @@ function aiMemory(){
   const saga=loadSaga(), canon=loadCanon(), chron=buildChronicle();
   let m='';
   if(saga && saga.text) m+='STORY SO FAR (long-term memory — stay consistent with it): '+saga.text+'\n';
-  const recent=chron.slice(-14);
+  // no gap: before the saga exists send EVERY stored day raw; after, the raw
+  // window is 21 days — exactly where the saga's coverage begins (KEEP=21)
+  const recent = saga ? chron.slice(-21) : chron.slice(-60);
   if(recent.length) m+='RECENT DAYS: '+recent.join(' | ')+'\n';
   if(meta.read.length) m+='CHAPTERS KOKO HAS LIVED, in order: '+meta.read.map(chronTitle).join(' -> ')+'\n';
   if(canon.length) m+='PERSONALIZED SCENE NOTES (things that canonically happened): '+canon.map(c=>c.t+': '+c.note).join(' | ')+'\n';
