@@ -1043,14 +1043,36 @@ const ROOK_SUSPICIOUS=[
   'Someone fixed his flat port thruster in the night. He spent the morning glaring at it. It purrs now. He hates how much he doesn\'t hate it.',
   'He left one protein tin on top of the cargo stack tonight. Just one. Set apart. Almost like bait. Almost like an offering. Take it.',
 ];
+const GARY_BOASTS=[
+  'Overheard at the gym: Gary telling dock workers he once took a skip in zero-g "with one boot off". The boot count changes every telling.',
+  'Gary, to an audience of three loaders: "Tracked him through an asteroid field. Blindfolded." Sparky ran the math. No.',
+  'Today\'s version of the Meridian story has TWO plasma storms. Last week it had one. You are keeping a chart.',
+  'He recited his bounty count at the noodle stand. It has gone up by four since Tuesday. Nobody checks. You check.',
+  'Overheard: "Fear? Never met her." He then jumped at a pressure valve. You did not laugh. Audibly.',
+];
+const GARY_HONEST=[
+  'From the vent above berth nine: Gary, alone, patching a burn on his jacket. Quietly: "...half a second slower and that was it."',
+  'He sat in his cutter with the engines off for an hour tonight. Muttered something about his mother\'s kitchen. Then ran pre-flight checks twice.',
+  'Alone at the wanted board, he touched one poster and said "not this one" to nobody. He looked tired. You didn\'t log why you stayed.',
+  'Overheard, one voice, no audience: "You nearly didn\'t come back that time." He laughed. It wasn\'t the show laugh.',
+  'He keeps a photo taped inside a supply locker. Somewhere green. He looks at it before every departure. Exactly once.',
+];
 function pickDirective(s, d){
+  const seed = d.getDate()+d.getMonth();
   const rookPool = s.rookDays>0 ? ROOK_SUSPICIOUS : ROOK_UNOBSERVED;
   const rookLabel = s.rookDays>0 ? '▸ BAY TWELVE // HE\'S COUNTING NOW' : '▸ BAY TWELVE // UNOBSERVED';
-  // alternate: even days Katie's board, odd days dockside snooping
-  if(d.getDate()%2===0){
-    return {label:'▸ STATION DIRECTIVE // WAGNER', text:KATIE_DIRECTIVES[(d.getDate()+d.getMonth())%KATIE_DIRECTIVES.length]};
+  // three-day rotation: Wagner's board / bay-twelve snooping / deck-six eavesdropping
+  const slot = d.getDate()%3;
+  if(slot===2 && s.garyDocked){
+    // journaling = paying attention: enough entries and Koko starts catching the honest moments
+    const pool = s.jDays>=5 ? GARY_HONEST : GARY_BOASTS;
+    const label = s.jDays>=5 ? '▸ DECK SIX // WHEN HE THINKS NO ONE\'S LISTENING' : '▸ DECK SIX // THE BOUNTY HUNTER HOLDS COURT';
+    return {label, text:pool[seed%pool.length]};
   }
-  return {label:rookLabel, text:rookPool[(d.getDate()+d.getMonth())%rookPool.length]};
+  if(slot===1){
+    return {label:rookLabel, text:rookPool[seed%rookPool.length]};
+  }
+  return {label:'▸ STATION DIRECTIVE // WAGNER', text:KATIE_DIRECTIVES[seed%KATIE_DIRECTIVES.length]};
 }
 function render(){
   today = loadDay(todayKey());
