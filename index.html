@@ -1632,9 +1632,19 @@ function finishBoot(){
   meta.booted=true; saveMeta(meta);
   render();
 }
-/* PWA: register the service worker (skipped on file:// where SWs aren't available) */
+/* PWA: register the service worker (skipped on file:// where SWs aren't available).
+   When a new version activates, reload once automatically — no manual double-refresh. */
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.register('sw.js').then(reg=>{ try{reg.update();}catch(e){} }).catch(()=>{});
+  // only auto-reload on an UPDATE (page was already controlled), never on first install
+  const swHadController = !!navigator.serviceWorker.controller;
+  let swRefreshed=false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(swRefreshed || !swHadController) return;
+    swRefreshed=true;
+    showToast('◈ SIGNAL PATCH RECEIVED — rebooting terminal');
+    setTimeout(()=>location.reload(), 1200);
+  });
 }
 
 document.getElementById('cfg-kcal').value=meta.cfg.kcal;
