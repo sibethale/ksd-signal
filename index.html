@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060a0e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KSD Signal">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>KSD // SIGNAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Oxanium:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060a0e;
+    --surface: #0c1218;
+    --surface2: #121a22;
+    --teal: #3ee6c1;
+    --teal-dim: #1a7a66;
+    --amber: #ffb347;
+    --amber-dim: #8a5f22;
+    --violet: #b07ce8;
+    --danger: #ff4a5e;
+    --text: #d8e6e2;
+    --text-dim: #5f7a74;
+    --border: #1c2a30;
+    --glow-teal: rgba(62,230,193,0.35);
+    --glow-amber: rgba(255,179,71,0.30);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    overflow:hidden;
+    position:relative;
+  }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(62,230,193,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(176,124,232,0.05) 0%, transparent 45%);
+  }
+
+  /* ══════ CRT OVERLAYS ══════ */
+  #crt-scanlines {
+    position:fixed; inset:0; pointer-events:none; z-index:900;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:multiply;
+  }
+  #crt-vignette {
+    position:fixed; inset:0; pointer-events:none; z-index:901;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+  }
+  #crt-flicker {
+    position:fixed; inset:0; pointer-events:none; z-index:902;
+    background:rgba(180,240,230,0.02); opacity:0;
+  }
+  #glitch-flash {
+    position:fixed; inset:0; pointer-events:none; z-index:950;
+    background:#000; opacity:0; display:flex; align-items:center; justify-content:center;
+  }
+  #glitch-flash svg { width:180px; height:180px; opacity:0.85; }
+  #tear-bar {
+    position:fixed; left:0; right:0; height:14px; z-index:940; pointer-events:none;
+    background:rgba(62,230,193,0.10); opacity:0; top:30%;
+    backdrop-filter: blur(1px);
+  }
+
+  /* degradation tiers */
+  body.g1 #crt-flicker { animation: flick1 7s infinite; }
+  body.g2 #crt-flicker { animation: flick1 3.2s infinite; }
+  body.g3 #crt-flicker { animation: flick3 1.6s infinite; }
+  @keyframes flick1 { 0%,94%,100%{opacity:0;} 95%{opacity:0.5;} 96%{opacity:0;} 97.5%{opacity:0.4;} }
+  @keyframes flick3 { 0%,80%,100%{opacity:0;} 84%{opacity:0.7;} 86%{opacity:0.1;} 90%{opacity:0.6;} 92%{opacity:0;} }
+  body.g2 .topbar-title, body.g3 .topbar-title, body.g3 .ring-value {
+    text-shadow: 2px 0 rgba(255,60,90,0.55), -2px 0 rgba(60,180,255,0.55);
+  }
+  body.g3 { animation: hueDrift 22s infinite; }
+  @keyframes hueDrift { 0%,100%{filter:none;} 48%{filter:none;} 50%{filter:hue-rotate(18deg) saturate(1.2);} 52%{filter:none;} }
+  body.burst #app { animation: jitter 0.28s steps(2) infinite; }
+  @keyframes jitter {
+    0%{transform:translate(0,0) skewX(0);} 25%{transform:translate(-3px,1px) skewX(0.6deg);}
+    50%{transform:translate(2px,-2px) skewX(-0.8deg);} 75%{transform:translate(-1px,2px) skewX(0.3deg);}
+  }
+  .scrambled { color:var(--danger) !important; }
+
+  /* ══════ APP SHELL ══════ */
+  #app { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; max-width:520px; margin:0 auto; }
+  .screen { display:none; flex-direction:column; flex:1; min-height:0; }
+  .screen.active { display:flex; }
+  .scroll-content { flex:1; overflow-y:auto; padding:14px 16px 90px; }
+  .scroll-content::-webkit-scrollbar { width:0; }
+
+  .topbar {
+    padding:14px 16px 10px; display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom:1px solid var(--border);
+    background:rgba(6,10,14,0.92); backdrop-filter:blur(6px);
+  }
+  .topbar-title {
+    font-family:'Oxanium', sans-serif; font-weight:800; font-size:17px; letter-spacing:2px;
+    color:var(--teal); text-shadow:0 0 18px var(--glow-teal); text-transform:uppercase;
+  }
+  .topbar-sub { font-size:11px; color:var(--text-dim); margin-top:3px; letter-spacing:1px; }
+  .streak-badge {
+    font-size:12px; padding:5px 11px; border-radius:3px; white-space:nowrap;
+    background:rgba(255,179,71,0.10); border:1px solid var(--amber-dim); color:var(--amber);
+  }
+
+  /* ══════ SIGNAL METER ══════ */
+  .signal-card {
+    margin-bottom:14px; padding:12px 14px; border:1px solid var(--border); border-radius:4px;
+    background:linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+    position:relative; overflow:hidden;
+  }
+  .signal-head { display:flex; justify-content:space-between; font-size:11px; letter-spacing:2px; color:var(--text-dim); margin-bottom:7px; }
+  .signal-status { font-weight:700; }
+  .signal-bar-wrap { height:10px; background:#0a0f13; border:1px solid var(--border); border-radius:2px; overflow:hidden; position:relative; }
+  .signal-bar {
+    height:100%; width:100%; transition:width 0.8s ease, background 0.8s;
+    background:linear-gradient(90deg, var(--teal-dim), var(--teal));
+    box-shadow:0 0 12px var(--glow-teal);
+  }
+  .signal-note { font-size:10px; color:var(--text-dim); margin-top:6px; font-style:italic; min-height:13px; }
+
+  /* ══════ RINGS ══════ */
+  .rings-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+  .ring-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:4px;
+    padding:12px 6px 10px; text-align:center; cursor:pointer; transition:border-color 0.2s;
+  }
+  .ring-card:active { border-color:var(--teal-dim); }
+  .ring-svg { display:block; margin:0 auto 4px; }
+  .ring-bg { fill:none; stroke:#131c22; stroke-width:6; }
+  .ring-fill { fill:none; stroke-width:6; stroke-linecap:butt; transform:rotate(-90deg); transform-origin:center; transition:stroke-dashoffset 0.7s ease; }
+  .ring-value { font-size:14px; font-weight:700; }
+  .ring-sub { font-size:9px; color:var(--text-dim); margin-top:1px; }
+  .ring-label { font-size:10px; letter-spacing:1.5px; color:var(--text-dim); margin-top:4px; text-transform:uppercase; }
+  .ring-goalmet { font-size:9px; margin-top:3px; letter-spacing:1px; }
+
+  /* ══════ SPARKY ══════ */
+  .sparky-card {
+    display:flex; gap:12px; align-items:center; margin-bottom:14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:12px 14px;
+  }
+  .sparky-orb {
+    width:56px; height:56px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--teal-dim); border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #12332c, #060a0e);
+    box-shadow:0 0 16px var(--glow-teal);
+    animation:hover 3.4s ease-in-out infinite;
+  }
+  @keyframes hover { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
+  .sparky-name { font-family:'Oxanium'; font-weight:700; font-size:13px; letter-spacing:1.5px; color:var(--teal); }
+  .sparky-line { font-size:11px; color:var(--text-dim); margin-top:3px; line-height:1.5; font-style:italic; }
+
+  /* ══════ QUICK ACTIONS ══════ */
+  .section-head { font-size:11px; letter-spacing:2.5px; color:var(--text-dim); margin:16px 0 8px; text-transform:uppercase; }
+  .quick-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .quick-btn {
+    background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:13px 6px;
+    color:var(--text); font-family:'Share Tech Mono'; cursor:pointer; text-align:center; transition:all 0.15s;
+  }
+  .quick-btn:active { border-color:var(--teal); box-shadow:0 0 12px var(--glow-teal); }
+  .quick-btn-icon { display:block; font-size:20px; margin-bottom:5px; }
+  .quick-btn-text { font-size:10px; letter-spacing:1px; text-transform:uppercase; }
+
+  .directive-card {
+    background:linear-gradient(135deg, #0d1a16 0%, var(--bg) 100%);
+    border:1px solid #1e3a32; border-radius:4px; padding:12px 14px; margin-top:14px;
+  }
+  .directive-label { font-size:10px; letter-spacing:2px; color:var(--amber); margin-bottom:5px; }
+  .directive-text { font-size:12px; line-height:1.6; color:var(--text); }
+
+  /* ══════ STORY ══════ */
+  .chapter-card {
+    background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--teal-dim);
+    border-radius:3px; padding:13px 14px; margin-bottom:10px; cursor:pointer; transition:all 0.15s;
+  }
+  .chapter-card.locked { border-left-color:var(--border); opacity:0.55; cursor:default; }
+  .chapter-card.unread { border-left-color:var(--amber); box-shadow:0 0 14px rgba(255,179,71,0.12); }
+  .chapter-num { font-size:10px; letter-spacing:2px; color:var(--text-dim); }
+  .chapter-title { font-family:'Oxanium'; font-weight:700; font-size:14px; margin-top:3px; color:var(--text); }
+  .chapter-card.unread .chapter-title { color:var(--amber); }
+  .chapter-cond { font-size:10px; color:var(--text-dim); margin-top:5px; font-style:italic; }
+  .chapter-badge { float:right; font-size:9px; padding:2px 7px; border-radius:2px; letter-spacing:1px; }
+  .cb-new { background:rgba(255,179,71,0.15); color:var(--amber); border:1px solid var(--amber-dim); }
+  .cb-read { background:rgba(62,230,193,0.08); color:var(--teal-dim); border:1px solid var(--border); }
+  .cb-locked { background:rgba(95,122,116,0.1); color:var(--text-dim); border:1px solid var(--border); }
+
+  /* VN reader */
+  #vn-overlay {
+    position:fixed; inset:0; z-index:800; background:rgba(4,6,9,0.97); display:none;
+    flex-direction:column; max-width:520px; margin:0 auto;
+  }
+  #vn-overlay.open { display:flex; }
+  .vn-head { padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .vn-title { font-family:'Oxanium'; font-weight:700; letter-spacing:1.5px; color:var(--amber); font-size:14px; }
+  .vn-close { background:none; border:1px solid var(--border); color:var(--text-dim); font-family:'Share Tech Mono'; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:11px; }
+  .vn-body { flex:1; overflow-y:auto; padding:18px 18px 40px; }
+  .vn-line { margin-bottom:14px; opacity:0; transform:translateY(6px); animation:vnIn 0.45s forwards; }
+  @keyframes vnIn { to{opacity:1; transform:translateY(0);} }
+  .vn-speaker { font-size:10px; letter-spacing:2px; font-weight:700; margin-bottom:3px; text-transform:uppercase; }
+  .vn-text { font-size:13px; line-height:1.7; color:var(--text); }
+  .vn-narr .vn-text { color:var(--text-dim); font-style:italic; }
+  .sp-koko{color:var(--teal);} .sp-rook{color:#e08a4a;} .sp-katie{color:#ff7a9e;}
+  .sp-sparky{color:#7ec8ff;} .sp-gary{color:#c8e07a;} .sp-other{color:var(--violet);} .sp-horror{color:var(--danger); text-shadow:0 0 8px rgba(255,74,94,0.5);}
+  .vn-next { display:block; margin:10px auto 0; background:var(--surface2); border:1px solid var(--teal-dim); color:var(--teal); font-family:'Share Tech Mono'; padding:9px 26px; border-radius:3px; cursor:pointer; font-size:12px; letter-spacing:2px; }
+
+  /* ══════ CREW ══════ */
+  .crew-card { display:flex; gap:13px; background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:13px 14px; margin-bottom:10px; align-items:center; }
+  .crew-avatar { width:52px; height:52px; border-radius:4px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:26px; border:1px solid var(--border); background:var(--surface2); }
+  .crew-info { flex:1; min-width:0; }
+  .crew-name { font-family:'Oxanium'; font-weight:700; font-size:14px; }
+  .crew-role { font-size:10px; color:var(--text-dim); letter-spacing:1px; margin-top:1px; }
+  .crew-bond-wrap { height:6px; background:#0a0f13; border:1px solid var(--border); border-radius:2px; margin-top:7px; overflow:hidden; }
+  .crew-bond { height:100%; transition:width 0.6s; }
+  .crew-bond-label { font-size:9px; color:var(--text-dim); margin-top:4px; letter-spacing:1px; }
+  .crew-hint { font-size:9px; color:var(--text-dim); font-style:italic; margin-top:2px; }
+
+  /* ══════ RECORDS ══════ */
+  .chart-card { background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:13px 14px; margin-bottom:12px; }
+  .chart-title { font-size:11px; letter-spacing:2px; color:var(--text-dim); margin-bottom:10px; text-transform:uppercase; }
+  .bars-row { display:flex; gap:6px; align-items:flex-end; height:70px; }
+  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+  .bar { width:100%; border-radius:2px 2px 0 0; min-height:2px; transition:height 0.5s; }
+  .bar-day { font-size:8px; color:var(--text-dim); }
+  .ach-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .ach-card { background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:12px 6px; text-align:center; }
+  .ach-card.unlocked { border-color:var(--amber-dim); box-shadow:0 0 10px rgba(255,179,71,0.10); }
+  .ach-card.locked { opacity:0.4; filter:grayscale(0.8); }
+  .ach-icon { font-size:22px; }
+  .ach-name { font-size:9px; letter-spacing:0.5px; margin-top:5px; color:var(--text); line-height:1.4; }
+  .ach-cond { font-size:8px; color:var(--text-dim); margin-top:3px; }
+
+  /* ══════ SYSTEM ══════ */
+  .sys-row { display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:12px 14px; margin-bottom:9px; }
+  .sys-label { font-size:12px; }
+  .sys-sub { font-size:10px; color:var(--text-dim); margin-top:2px; }
+  .sys-input { background:var(--surface2); border:1px solid var(--border); color:var(--teal); font-family:'Share Tech Mono'; font-size:13px; padding:6px 8px; width:80px; border-radius:3px; text-align:right; }
+  .sys-btn { background:var(--surface2); border:1px solid var(--danger); color:var(--danger); font-family:'Share Tech Mono'; padding:8px 16px; border-radius:3px; cursor:pointer; font-size:11px; width:100%; margin-top:10px; }
+
+  /* ══════ NAV ══════ */
+  .navbar {
+    position:fixed; bottom:0; left:0; right:0; max-width:520px; margin:0 auto; z-index:100;
+    display:flex; background:rgba(6,10,14,0.96); border-top:1px solid var(--border); backdrop-filter:blur(8px);
+  }
+  .nav-btn {
+    flex:1; background:none; border:none; color:var(--text-dim); font-family:'Share Tech Mono';
+    padding:11px 0 13px; cursor:pointer; font-size:9px; letter-spacing:1px; text-transform:uppercase;
+  }
+  .nav-btn .nav-ico { display:block; font-size:17px; margin-bottom:3px; }
+  .nav-btn.active { color:var(--teal); text-shadow:0 0 10px var(--glow-teal); }
+
+  /* ══════ MODALS / TOASTS ══════ */
+  .modal-bg { position:fixed; inset:0; z-index:500; background:rgba(3,5,8,0.85); display:none; align-items:flex-end; justify-content:center; }
+  .modal-bg.open { display:flex; }
+  .modal {
+    width:100%; max-width:520px; background:var(--surface); border:1px solid var(--border); border-bottom:none;
+    border-radius:8px 8px 0 0; padding:20px 18px 26px; animation:slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(40px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+  .modal-title { font-family:'Oxanium'; font-weight:700; font-size:15px; letter-spacing:1px; color:var(--teal); margin-bottom:4px; }
+  .modal-sub { font-size:11px; color:var(--text-dim); margin-bottom:14px; }
+  .modal-input { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); font-family:'Share Tech Mono'; font-size:14px; padding:11px 12px; border-radius:3px; margin-bottom:12px; }
+  .modal-input:focus { outline:none; border-color:var(--teal-dim); }
+  .chip-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .chip { background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); font-family:'Share Tech Mono'; font-size:11px; padding:7px 12px; border-radius:3px; cursor:pointer; }
+  .chip:active, .chip.sel { border-color:var(--teal); color:var(--teal); }
+  .fc-opt { background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:11px 12px; margin-bottom:9px; cursor:pointer; transition:all 0.15s; }
+  .fc-opt.sel { border-color:var(--teal); box-shadow:0 0 10px var(--glow-teal); }
+  .mood-row { display:flex; gap:8px; margin-bottom:14px; }
+  .mood-btn { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:11px 0; font-size:20px; cursor:pointer; }
+  .mood-btn.sel { border-color:var(--teal); box-shadow:0 0 10px var(--glow-teal); }
+  .modal-btn { width:100%; background:linear-gradient(135deg, var(--teal-dim), #2aa886); border:none; color:#04110d; font-family:'Oxanium'; font-weight:700; font-size:13px; letter-spacing:2px; padding:13px; border-radius:3px; cursor:pointer; text-transform:uppercase; }
+  #toast {
+    position:fixed; bottom:78px; left:50%; transform:translateX(-50%) translateY(20px); z-index:960;
+    background:var(--surface2); border:1px solid var(--teal-dim); color:var(--text); font-size:12px;
+    padding:10px 18px; border-radius:3px; opacity:0; transition:all 0.3s; pointer-events:none; max-width:86%; text-align:center;
+  }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #toast.horror { border-color:var(--danger); color:var(--danger); font-family:'VT323'; font-size:16px; letter-spacing:1px; }
+
+  /* ══════ BOOT ══════ */
+  #boot {
+    position:fixed; inset:0; z-index:999; background:var(--bg); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:30px; text-align:center;
+  }
+  #boot.hidden { display:none; }
+  .boot-log { font-family:'VT323'; font-size:16px; color:var(--teal); text-align:left; width:100%; max-width:400px; min-height:180px; line-height:1.7; }
+  .boot-title { font-family:'Oxanium'; font-weight:800; font-size:26px; letter-spacing:5px; color:var(--teal); text-shadow:0 0 24px var(--glow-teal); margin-bottom:6px; }
+  .boot-sub { font-size:11px; color:var(--text-dim); letter-spacing:3px; margin-bottom:30px; }
+  .boot-btn { display:none; margin-top:26px; background:none; border:1px solid var(--teal); color:var(--teal); font-family:'Oxanium'; font-weight:700; letter-spacing:3px; font-size:13px; padding:12px 34px; border-radius:3px; cursor:pointer; box-shadow:0 0 18px var(--glow-teal); }
+</style>
+</head>
+<body>
+<div id="crt-scanlines"></div>
+<div id="crt-vignette"></div>
+<div id="crt-flicker"></div>
+<div id="tear-bar"></div>
+<div id="glitch-flash">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#ff4a5e" stroke-width="1.6" fill="none" stroke-linecap="round">
+      <ellipse cx="50" cy="52" rx="12" ry="15" fill="#12060a"/>
+      <path d="M40 44 Q22 30 12 34"/><path d="M40 50 Q20 46 8 52"/><path d="M40 58 Q22 62 14 74"/><path d="M44 64 Q34 78 30 90"/>
+      <path d="M60 44 Q78 30 88 34"/><path d="M60 50 Q80 46 92 52"/><path d="M60 58 Q78 62 86 74"/><path d="M56 64 Q66 78 70 90"/>
+      <circle cx="45" cy="46" r="2.4" fill="#ff4a5e"/><circle cx="55" cy="46" r="2.4" fill="#ff4a5e"/>
+      <circle cx="43" cy="52" r="1.5" fill="#ff4a5e"/><circle cx="57" cy="52" r="1.5" fill="#ff4a5e"/>
+      <path d="M46 60 L50 63 L54 60"/>
+    </g>
+  </svg>
+</div>
+
+<div id="boot">
+  <div class="boot-title glitchable">KEPPLER SPACE DOCK</div>
+  <div class="boot-sub">PERSONAL TERMINAL // DECK 7 // UNREGISTERED</div>
+  <div class="boot-log" id="boot-log"></div>
+  <button class="boot-btn" id="boot-btn" onclick="finishBoot()">JACK IN</button>
+</div>
+
+<div id="app">
+  <!-- ══════ DECK (HOME) ══════ -->
+  <div id="screen-deck" class="screen active">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title glitchable">KSD // SIGNAL</div>
+        <div class="topbar-sub" id="deck-date">—</div>
+      </div>
+      <div class="streak-badge">⚡ <span id="streak-count">0</span> day streak</div>
+    </div>
+    <div class="scroll-content">
+      <div class="signal-card">
+        <div class="signal-head">
+          <span>SIGNAL INTEGRITY</span>
+          <span class="signal-status glitchable" id="signal-status">—</span>
+        </div>
+        <div class="signal-bar-wrap"><div class="signal-bar" id="signal-bar"></div></div>
+        <div class="signal-note" id="signal-note"></div>
+      </div>
+
+      <div class="signal-card" onclick="openForecast()" style="cursor:pointer;">
+        <div class="signal-head">
+          <span>SHIFT FORECAST</span>
+          <span class="signal-status glitchable" id="fc-status">NOT FILED</span>
+        </div>
+        <div class="signal-note" id="fc-note">Sparky is waiting for today's exercise forecast. It sets your ration limit.</div>
+      </div>
+
+      <div class="rings-grid">
+        <div class="ring-card" onclick="openLog('meal')">
+          <svg width="64" height="64" class="ring-svg">
+            <circle class="ring-bg" cx="32" cy="32" r="25"/>
+            <circle class="ring-fill" cx="32" cy="32" r="25" stroke="#3ee6c1" stroke-dasharray="157" stroke-dashoffset="157" id="ring-kcal"/>
+          </svg>
+          <div class="ring-value glitchable" style="color:var(--teal)" id="val-kcal">0</div>
+          <div class="ring-sub" id="sub-kcal">/ 2000 kcal</div>
+          <div class="ring-label">Sustenance</div>
+          <div class="ring-goalmet" id="met-kcal"></div>
+        </div>
+        <div class="ring-card" onclick="openLog('move')">
+          <svg width="64" height="64" class="ring-svg">
+            <circle class="ring-bg" cx="32" cy="32" r="25"/>
+            <circle class="ring-fill" cx="32" cy="32" r="25" stroke="#ffb347" stroke-dasharray="157" stroke-dashoffset="157" id="ring-move"/>
+          </svg>
+          <div class="ring-value glitchable" style="color:var(--amber)" id="val-move">0m</div>
+          <div class="ring-sub" id="sub-move">/ 30 min</div>
+          <div class="ring-label">Exertion</div>
+          <div class="ring-goalmet" id="met-move"></div>
+        </div>
+        <div class="ring-card" onclick="openLog('mind')">
+          <svg width="64" height="64" class="ring-svg">
+            <circle class="ring-bg" cx="32" cy="32" r="25"/>
+            <circle class="ring-fill" cx="32" cy="32" r="25" stroke="#b07ce8" stroke-dasharray="157" stroke-dashoffset="157" id="ring-mind"/>
+          </svg>
+          <div class="ring-value glitchable" style="color:var(--violet)" id="val-mind">—</div>
+          <div class="ring-sub">psych eval</div>
+          <div class="ring-label">Mind</div>
+          <div class="ring-goalmet" id="met-mind"></div>
+        </div>
+      </div>
+
+      <div class="sparky-card">
+        <div class="sparky-orb" id="sparky-orb">
+          <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g stroke="#3ee6c1" stroke-width="2" fill="none" stroke-linecap="round">
+              <ellipse cx="50" cy="52" rx="14" ry="12" fill="#0a201b"/>
+              <path d="M38 48 Q26 40 20 42"/><path d="M38 56 Q26 58 22 66"/>
+              <path d="M62 48 Q74 40 80 42"/><path d="M62 56 Q74 58 78 66"/>
+              <path d="M42 42 Q36 30 42 24" opacity="0.7"/><path d="M58 42 Q64 30 58 24" opacity="0.7"/>
+              <circle cx="45" cy="50" r="3" fill="#3ee6c1"/><circle cx="55" cy="50" r="3" fill="#3ee6c1"/>
+            </g>
+          </svg>
+        </div>
+        <div>
+          <div class="sparky-name">SPARKY <span style="color:var(--text-dim);font-weight:400;font-size:10px;" id="sparky-mood">// nominal</span></div>
+          <div class="sparky-line glitchable" id="sparky-line">Boot sequence complete. Hello, Koko.</div>
+        </div>
+      </div>
+
+      <div class="section-head">Log Activity</div>
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="openLog('meal')"><span class="quick-btn-icon">🍜</span><span class="quick-btn-text">Rations</span></button>
+        <button class="quick-btn" onclick="openLog('move')"><span class="quick-btn-icon">🔧</span><span class="quick-btn-text">Exertion</span></button>
+        <button class="quick-btn" onclick="openLog('mind')"><span class="quick-btn-icon">🧠</span><span class="quick-btn-text">Psych Eval</span></button>
+        <button class="quick-btn" onclick="openLog('care')"><span class="quick-btn-icon">🧴</span><span class="quick-btn-text">Care</span></button>
+      </div>
+
+      <div class="directive-card">
+        <div class="directive-label">▸ STATION DIRECTIVE</div>
+        <div class="directive-text glitchable" id="directive-text">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ STORY ══════ -->
+  <div id="screen-story" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title glitchable">LOGBOOK</div>
+        <div class="topbar-sub">Koko's records // unlock by holding your goals</div>
+      </div>
+      <div class="streak-badge" id="story-count">0/0</div>
+    </div>
+    <div class="scroll-content" id="chapter-list"></div>
+  </div>
+
+  <!-- ══════ CREW ══════ -->
+  <div id="screen-crew" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title glitchable">CREW MANIFEST</div>
+        <div class="topbar-sub">Bonds grow as you hold the goals they respect</div>
+      </div>
+    </div>
+    <div class="scroll-content" id="crew-list"></div>
+  </div>
+
+  <!-- ══════ RECORDS ══════ -->
+  <div id="screen-records" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title glitchable">RECORDS</div>
+        <div class="topbar-sub">Seven-cycle telemetry &amp; commendations</div>
+      </div>
+    </div>
+    <div class="scroll-content">
+      <div class="chart-card">
+        <div class="chart-title">Goals met — last 7 cycles</div>
+        <div class="bars-row" id="bars-goals"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Signal integrity trend</div>
+        <div class="bars-row" id="bars-signal"></div>
+      </div>
+      <div class="section-head">Commendations</div>
+      <div class="ach-grid" id="ach-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══════ SYSTEM ══════ -->
+  <div id="screen-sys" class="screen">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title glitchable">SYSTEM</div>
+        <div class="topbar-sub">Terminal configuration</div>
+      </div>
+    </div>
+    <div class="scroll-content" id="sys-content">
+      <div class="sys-row">
+        <div><div class="sys-label">Fallback kcal limit</div><div class="sys-sub">used only on days without a filed shift forecast</div></div>
+        <input class="sys-input" type="number" id="cfg-kcal" onchange="saveCfg()">
+      </div>
+      <div class="sys-row">
+        <div><div class="sys-label">Exertion target</div><div class="sys-sub">daily active minutes</div></div>
+        <input class="sys-input" type="number" id="cfg-move" onchange="saveCfg()">
+      </div>
+      <div class="sys-row">
+        <div><div class="sys-label">Horror effects</div><div class="sys-sub">interface degradation when signal drops</div></div>
+        <input type="checkbox" id="cfg-horror" checked onchange="saveCfg()" style="width:20px;height:20px;accent-color:#3ee6c1;">
+      </div>
+      <button class="sys-btn" onclick="wipeData()">⚠ PURGE ALL TERMINAL DATA</button>
+      <div style="font-size:9px;color:var(--text-dim);margin-top:14px;text-align:center;letter-spacing:1px;">
+        KSD//SIGNAL v1.0 — unregistered terminal, deck 7<br>data stays on this device
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar">
+    <button class="nav-btn active" id="nav-deck" onclick="switchTab('deck')"><span class="nav-ico">◉</span>Deck</button>
+    <button class="nav-btn" id="nav-story" onclick="switchTab('story')"><span class="nav-ico">▤</span>Logbook</button>
+    <button class="nav-btn" id="nav-crew" onclick="switchTab('crew')"><span class="nav-ico">✧</span>Crew</button>
+    <button class="nav-btn" id="nav-records" onclick="switchTab('records')"><span class="nav-ico">▦</span>Records</button>
+    <button class="nav-btn" id="nav-sys" onclick="switchTab('sys')"><span class="nav-ico">⚙</span>System</button>
+  </div>
+</div>
+
+<!-- VN READER -->
+<div id="vn-overlay">
+  <div class="vn-head">
+    <div class="vn-title" id="vn-title">—</div>
+    <button class="vn-close" onclick="closeVN()">CLOSE</button>
+  </div>
+  <div class="vn-body" id="vn-body"></div>
+</div>
+
+<!-- LOG MODAL -->
+<div class="modal-bg" id="log-modal" onclick="closeLog(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="log-title">—</div>
+    <div class="modal-sub" id="log-sub">—</div>
+    <div id="log-meal-body" style="display:none;">
+      <input class="modal-input" type="number" id="log-kcal-input" placeholder="kcal (e.g. 550)">
+      <div class="chip-row">
+        <button class="chip" onclick="setKcal(350)">Small · 350</button>
+        <button class="chip" onclick="setKcal(550)">Meal · 550</button>
+        <button class="chip" onclick="setKcal(750)">Big meal · 750</button>
+        <button class="chip" onclick="setKcal(150)">Snack · 150</button>
+      </div>
+    </div>
+    <div id="log-move-body" style="display:none;">
+      <input class="modal-input" type="number" id="log-move-input" placeholder="active minutes (e.g. 30)">
+      <div class="chip-row">
+        <button class="chip" onclick="setMove(15)">15 min</button>
+        <button class="chip" onclick="setMove(30)">30 min</button>
+        <button class="chip" onclick="setMove(45)">45 min</button>
+        <button class="chip" onclick="setMove(60)">60 min</button>
+      </div>
+    </div>
+    <div id="log-care-body" style="display:none;">
+      <div class="chip-row">
+        <button class="chip" id="care-skin" onclick="this.classList.toggle('sel')">🧴 Skin routine</button>
+        <button class="chip" id="care-teeth" onclick="this.classList.toggle('sel')">🪥 Brushed teeth</button>
+      </div>
+    </div>
+    <div id="log-mind-body" style="display:none;">
+      <div class="mood-row">
+        <button class="mood-btn" data-m="1" onclick="pickMood(1,this)">🌑</button>
+        <button class="mood-btn" data-m="2" onclick="pickMood(2,this)">🌘</button>
+        <button class="mood-btn" data-m="3" onclick="pickMood(3,this)">🌗</button>
+        <button class="mood-btn" data-m="4" onclick="pickMood(4,this)">🌔</button>
+        <button class="mood-btn" data-m="5" onclick="pickMood(5,this)">🌕</button>
+      </div>
+      <input class="modal-input" type="text" id="log-journal-input" placeholder="optional — one line about today">
+    </div>
+    <button class="modal-btn" onclick="confirmLog()">Transmit</button>
+  </div>
+</div>
+
+<!-- FORECAST MODAL -->
+<div class="modal-bg" id="fc-modal" onclick="closeForecast(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">SHIFT FORECAST</div>
+    <div class="modal-sub">SPARKY: "How much exercise will be done today, Koko?" — this books your ration limit. In between two? The station always books the lower ration.</div>
+    <div id="fc-options"></div>
+    <button class="modal-btn" onclick="confirmForecast()">File Forecast</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script>
+/* ═══════════════ PERSISTENCE ═══════════════ */
+const DEF_CFG = { kcal: 2000, move: 30, horror: true };
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function keyOffset(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function loadDay(k){ try{ return JSON.parse(localStorage.getItem('ksd_day_'+k))||{kcal:0,move:0,mood:0,journal:'',careSkin:false,careTeeth:false}; }catch(e){ return {kcal:0,move:0,mood:0,journal:'',careSkin:false,careTeeth:false}; } }
+function saveDay(k,d){ localStorage.setItem('ksd_day_'+k, JSON.stringify(d)); }
+function loadMeta(){ try{ return JSON.parse(localStorage.getItem('ksd_meta'))||{}; }catch(e){ return {}; } }
+function saveMeta(m){ localStorage.setItem('ksd_meta', JSON.stringify(m)); }
+let meta = Object.assign({ booted:false, read:[], ach:[], bestStreak:0, wasCritical:false, cfg:Object.assign({},DEF_CFG) }, loadMeta());
+meta.cfg = Object.assign({}, DEF_CFG, meta.cfg);
+let today = loadDay(todayKey());
+
+/* ═══════════════ SHIFT FORECAST ═══════════════ */
+/* morning question: "how much exercise will be done today?" -> books the day's kcal limit.
+   In-between answers always take the LOWER limit (thresholds are floors). */
+const FORECAST=[
+  {kcal:1750, name:'Inactive', min:0,
+   desc:'Sitting most of the shift, no structured exercise. Desk work, transit, evenings at the console. Often under ~5,000 steps.'},
+  {kcal:1900, name:'Somewhat Active', min:20,
+   desc:'Mostly sedentary but with regular light movement — a 20–30 min walk, a short cycle commute, light gardening, 1–2 easy sessions a week. ~5,000–7,500 steps.'},
+  {kcal:2100, name:'Active', min:40,
+   desc:'Deliberate exercise most days, or a shift on your feet — 30–60 min moderate training (jog, swim, strength, brisk cycle), or standing/walking work. ~7,500–10,000+ steps.'},
+  {kcal:2400, name:'Very Active', min:75,
+   desc:'Hard training nearly daily or heavy physical labour — 60+ min sessions, cargo work, construction pace. Often 12,000+ steps plus intense sessions.'},
+];
+function kcalLimit(d){ return (d && d.forecast!=null) ? FORECAST[d.forecast].kcal : meta.cfg.kcal; }
+/* what activity level the logged exertion actually proves (floors -> lower category when in between) */
+function achievedLvl(d){ const m=d.move||0; return m>=75?3 : m>=40?2 : m>=20?1 : 0; }
+
+/* goal checks: day object -> booleans */
+function goalKcal(d){ const L=kcalLimit(d); return d.kcal >= L*0.6 && d.kcal <= L*1.1; }
+function goalMove(d){ return d.move >= meta.cfg.move; }
+function goalMind(d){ return d.mood > 0; }
+function goalsMet(d){ return (goalKcal(d)?1:0)+(goalMove(d)?1:0)+(goalMind(d)?1:0); }
+
+/* aggregate stats over history */
+function stats(){
+  let s={fullDays:0, kcalDays:0, moveDays:0, mindDays:0, jDays:0, rookDays:0, careDays:0, streak:0, streakBroken:false};
+  for(let i=0;i<120;i++){
+    const d=loadDay(keyOffset(i));
+    const g=goalsMet(d);
+    if(goalKcal(d))s.kcalDays++; if(goalMove(d))s.moveDays++; if(goalMind(d))s.mindDays++;
+    if((d.journal||'').trim())s.jDays++;
+    if(goalKcal(d)&&goalMove(d))s.rookDays++;   // discipline days — exercise AND diet; how Rook gets met
+    if(d.careSkin&&d.careTeeth)s.careDays++;    // care-routine days — how Katie gets met
+    if(g===3)s.fullDays++;
+    if(!s.streakBroken){
+      if(g>=2)s.streak++;
+      else if(i===0){/* today still in progress — don't break */}
+      else s.streakBroken=true;
+    }
+  }
+  if(s.streak>meta.bestStreak){ meta.bestStreak=s.streak; saveMeta(meta); }
+  // Gary docks only while the journal is warm (an entry within the last 3 days)
+  s.garyDocked = [0,1,2].some(i=>(loadDay(keyOffset(i)).journal||'').trim());
+  return s;
+}
+
+/* ═══════════════ SIGNAL INTEGRITY ═══════════════ */
+function computeSignal(){
+  // base: weighted goal completion over last 7 days (yesterday weighs most)
+  let wsum=0, wtot=0;
+  for(let i=1;i<=7;i++){
+    const w=8-i;
+    wsum += (goalsMet(loadDay(keyOffset(i)))/3)*w;
+    wtot += w;
+  }
+  let base = wtot? (wsum/wtot)*100 : 60;
+  // trend: last 3 days vs the 4 before — declining numbers erode the signal
+  const recent=(goalsMet(loadDay(keyOffset(1)))+goalsMet(loadDay(keyOffset(2)))+goalsMet(loadDay(keyOffset(3))))/9;
+  const prior=(goalsMet(loadDay(keyOffset(4)))+goalsMet(loadDay(keyOffset(5)))+goalsMet(loadDay(keyOffset(6)))+goalsMet(loadDay(keyOffset(7))))/12;
+  const trend=recent-prior;                 // -1..1
+  let sig = base + trend*25;
+  // today's progress gives a small live boost
+  sig += goalsMet(today)*3;
+  // brand-new terminal starts uneasy but not horrific
+  const anyHistory = [1,2,3].some(i=>goalsMet(loadDay(keyOffset(i)))>0);
+  if(!anyHistory && base===0) sig = 62;
+  // forecast audit: days where the claimed activity level exceeded what was actually
+  // logged mean the ration limit was booked too high — the station notices.
+  let pen=0;
+  for(let i=1;i<=7;i++){
+    const d=loadDay(keyOffset(i));
+    if(d.forecast!=null){
+      const diff=Math.max(0, d.forecast-achievedLvl(d));
+      pen += diff*(8-i)*1.2;   // recent lies weigh most
+    }
+  }
+  sig -= Math.min(30, pen);
+  return Math.max(2, Math.min(100, Math.round(sig)));
+}
+function signalTier(sig){ return sig>=75?0 : sig>=50?1 : sig>=25?2 : 3; }
+const TIER_INFO=[
+  {label:'STABLE',   color:'#3ee6c1', note:'All decks quiet. Sparky hums a little tune.'},
+  {label:'UNEASY',   color:'#ffb347', note:'Minor interference on deck 7. Probably the air recyclers. Probably.'},
+  {label:'DEGRADED', color:'#ff8a4a', note:'Something is chewing the station feed. Katie has been notified.'},
+  {label:'CRITICAL', color:'#ff4a5e', note:'SIGNAL LOST // SIGNAL LOST // do not look at the cargo bay windows'},
+];
+
+/* ═══════════════ GLITCH ENGINE ═══════════════ */
+let curTier=0;
+const HORROR_MSGS=[
+  'motion detected — cargo bay 4 — no lifesigns',
+  'sparky is playing the low triple-chime again. he only plays it when something is listening.',
+  'hull mic picks up scratching. exterior. we are in vacuum.',
+  'manifest error: container 88 is empty. container 88 was never empty.',
+  'ROOK: whatever you do, kid, don\'t open bay twelve tonight.',
+  'psych eval overdue. the station worries about you.',
+  'KATIE: security sweep on deck 4. stay in the vents, Koko.',
+  'it is standing very still so you will think it is cargo',
+];
+const GLITCH_CHARS='█▓▒░@#%&$!?<>/\\|';
+function scramble(el){
+  const orig=el.textContent;
+  if(!orig || el.dataset.busy)return;
+  el.dataset.busy='1'; el.classList.add('scrambled');
+  el.textContent=orig.split('').map(c=>c===' '?' ':(Math.random()<0.6?GLITCH_CHARS[Math.floor(Math.random()*GLITCH_CHARS.length)]:c)).join('');
+  setTimeout(()=>{ el.textContent=orig; el.classList.remove('scrambled'); delete el.dataset.busy; }, 160+Math.random()*240);
+}
+function glitchBurst(strength){
+  document.body.classList.add('burst');
+  setTimeout(()=>document.body.classList.remove('burst'), 200+strength*180);
+  const tear=document.getElementById('tear-bar');
+  tear.style.top=(10+Math.random()*70)+'%'; tear.style.opacity='1';
+  setTimeout(()=>tear.style.opacity='0', 300);
+  const els=[...document.querySelectorAll('.glitchable')].filter(e=>e.offsetParent);
+  for(let i=0;i<strength;i++){ const e=els[Math.floor(Math.random()*els.length)]; if(e)scramble(e); }
+}
+function horrorFlash(){
+  const f=document.getElementById('glitch-flash');
+  f.style.opacity='0.92';
+  setTimeout(()=>f.style.opacity='0', 110+Math.random()*90);
+}
+function glitchTick(){
+  if(!meta.cfg.horror || curTier===0) return;
+  const p=[0, 0.10, 0.30, 0.55][curTier];
+  if(Math.random()<p) glitchBurst(curTier);
+  if(curTier>=2 && Math.random()<0.10) showToast(HORROR_MSGS[Math.floor(Math.random()*HORROR_MSGS.length)], true);
+  if(curTier===3 && Math.random()<0.07) horrorFlash();
+}
+setInterval(glitchTick, 4000);
+
+/* ═══════════════ STORY ═══════════════ */
+/* speakers: koko rook katie sparky gary other horror narr */
+const CHAPTERS=[
+{ id:'ch1', title:'Stowaway', cond:'Transmit your first log', test:s=>s.any,
+  scene:[
+    ['narr','Cargo crate KX-201 opens from the inside. A grease-streaked girl with chaotic blonde curls unfolds herself from between coolant drums, nineteen years old and sore in every joint.'],
+    ['koko','Okay. Okay okay okay. Keppler Space Dock. Biggest station this side of the Meridian lanes. Nobody notices one extra person on a station of two hundred thousand.'],
+    ['narr','Something stirs in her satchel — a tiny drone, spider-legged, beetle wings folding out with a soft click. Built from scraps. Her only crew.'],
+    ['narr','A rising three-note boot chime, then a low doubtful buzz — the tone he saves for places they are not supposed to be.'],
+    ['koko','Sparky! You survived the freight scan. Good. New rule: we keep our heads down, we find work, and we do NOT touch anyone else\'s engines without asking.'],
+    ['narr','One flat beep. Koko has learned this one. It means: logged, and doubted.'],
+    ['koko','...Ten credits says I break it by morning. Don\'t log that.'],
+    ['narr','Two quick clicks. Logged.'],
+  ]},
+{ id:'ch2', title:'The Grump of Bay Twelve', cond:'Meet exercise & diet goals in the same day', test:s=>s.rookDays>=1,
+  scene:[
+    ['narr','Bay twelve. An old freighter called the PEREGRINE sits half-dark, one thruster cowling open like a wound. Koko is elbow-deep in it before she remembers the rule.'],
+    ['rook','...What. Are you doing. In my ship.'],
+    ['narr','Forty-something, storm-grey stubble, the kind of face that files complaints against sunrises. Captain Henry Rook.'],
+    ['koko','Your intermix regulator is fried! I could hear it whining from the causeway. That\'s a two-day dock repair, or, and hear me out — I fix it in an hour for lunch money.'],
+    ['rook','I don\'t hire stowaways.'],
+    ['koko','Who said I\'m a—'],
+    ['rook','Grease on freight-crate stencils, no dock badge, and you flinched at the security cam. Get out of my engine.'],
+    ['narr','She gets out of his engine. She leaves the regulator, quietly, 60% recalibrated.'],
+    ['rook','...huh. Runs smoother.'],
+    ['narr','He does not report her. Neither of them mentions it.'],
+  ]},
+{ id:'ch3', title:'Administrator Wagner', cond:'Complete the care routine (skin + teeth) 2 days', test:s=>s.careDays>=2,
+  scene:[
+    ['narr','Every stowaway gets found eventually. Koko is found by a tall woman with long red hair, wings shimmering faintly under a very official administrator\'s coat.'],
+    ['katie','Korrine Kolczyński. No entry record, no ration account, and according to my cameras you\'ve fixed eleven pieces of station equipment for food money. Including two of MINE.'],
+    ['koko','I can explain the— wait, fixed. You said fixed. Not sabotaged. Fixed.'],
+    ['katie','Which is why you\'re getting a work permit, not an airlock hearing. Half-fairy, by the way, before you keep staring at the wings. Father\'s side.'],
+    ['koko','I wasn\'t— okay I was staring.'],
+    ['katie','Two conditions. One: you eat real meals, on a real schedule — I run this station, I will not run it around fainting engineers. Two: anything strange comes out of a cargo hold, you tell me FIRST.'],
+    ['koko','Strange like what?'],
+    ['narr','Katie Wagner smiles the way people smile when they\'ve read reports they can\'t unread.'],
+    ['katie','Eat your meals, Koko.'],
+  ]},
+{ id:'ch4', title:'Something in the Hold', cond:'Hold a 3-day streak', test:s=>s.best>=3,
+  scene:[
+    ['narr','Night cycle. Koko takes a shortcut through cargo bay 4. The lights are out. The lights are never out.'],
+    ['narr','Sparky\'s lamp sweeps the stacks and he gives two short clicks — thermal feed clean. Empty bay, says the drone.'],
+    ['koko','Good.'],
+    ['narr','Then a third click. Slower. And a warning chime she has never heard him make before. His audio feed disagrees.'],
+    ['narr','Scratching. Slow, patient, from inside container 88 — inbound freight off a mining barge that docked with a dead crew compartment and no explanation.'],
+    ['horror','...korrrr...ine...'],
+    ['koko','Sparky. Tell me that was you.'],
+    ['narr','He answers with the saddest little chirp in his library. It was not him.'],
+    ['narr','The container seal is intact. The scratching is coming from OUTSIDE the container — above them, in the dark between the stacks. Something with too many legs, folding itself flat against the ceiling, wearing shadows.'],
+    ['narr','Koko does not scream. She walks, very fast, in a straight line, and files her first strange-cargo report at 0313 station time.'],
+    ['katie','[incident log] Bay 4 sealed pending sweep. K.K.\'s report credible. This is the third one this quarter.'],
+  ]},
+{ id:'ch5', title:'The Bounty Hunter', cond:'Meet the exercise goal 5 times', test:s=>s.moveDays>=5,
+  scene:[
+    ['narr','The gym on deck 6 is where dock workers burn off double shifts. Koko goes because Katie made it a permit condition. She stays because of Tuesdays.'],
+    ['narr','On Tuesdays a young bounty hunter docks his cutter, checks the wanted boards, and does pull-ups like gravity owes him money.'],
+    ['gary','...You\'re the engineer, right? Koko? You rebuilt the mag-clamps on berth nine. My docking fee went down four credits.'],
+    ['koko','You know my name. I mean. Yes. Clamps. I do clamps. I— do maintenance on clamps, that came out wrong.'],
+    ['gary','Gary. I chase skips through this sector, so I\'m around a lot. If the clamps ever eat my ship, I know who to yell for.'],
+    ['narr','He goes back to the pull-up bar. Koko stares at a wrench for eleven seconds.'],
+    ['narr','From her tool bag, Sparky emits a rapid ascending trill — the telemetry-alert tone.'],
+    ['koko','SPARKY. Not. Now.'],
+    ['narr','A smug two-note chime. The exercise goal, apparently, has been met.'],
+  ]},
+{ id:'ch6', title:'Coolant and Coffee', cond:'7 perfect days total', test:s=>s.fullDays>=7,
+  scene:[
+    ['narr','The Peregrine\'s coolant loop dies in dock, badly, at 0200. Rook has been fighting it for six hours. Koko is walking past with a toolbox. It\'s inevitable, really.'],
+    ['rook','No.'],
+    ['koko','I didn\'t say anything.'],
+    ['rook','You were about to. ... Fine. FINE. Touch the engine.'],
+    ['narr','They work in silence for an hour. Then not in silence. He grumbles about her bracing technique; she fixes his manifold routing "philosophy". Somewhere in hour two it stops being an argument and becomes a rhythm.'],
+    ['rook','Where\'d you learn field-splicing? That\'s deep-run smuggler technique.'],
+    ['koko','Taught myself. Freighter manuals and dumpster parts, since I was nine.'],
+    ['narr','Rook looks at her for a long moment — the look of a man rearranging an opinion.'],
+    ['rook','...There\'s coffee in the galley. Real beans, not station sludge. Don\'t tell Wagner I have them, she\'ll tax me.'],
+    ['narr','It is the nicest thing anyone has said to her in two years.'],
+  ]},
+{ id:'ch7', title:'Quarantine', cond:'Hold a 5-day streak', test:s=>s.best>=5,
+  scene:[
+    ['narr','It gets out on a Thursday. Deck 4 goes dark section by section, like something is eating the lights.'],
+    ['katie','Full quarantine. Security to bulkhead nine. Nobody opens that deck, I don\'t care whose cargo is in there—'],
+    ['rook','MY cargo is in there, Wagner!'],
+    ['katie','Then you should have renewed your docking permit sometime in the last FIVE YEARS, Henry, and you\'d have a claim form!'],
+    ['narr','Meanwhile: the maintenance ducts. Twenty centimeters of crawlspace, one girl, one drone, rerouting power so security\'s sweep drones can see in the dark.'],
+    ['narr','Sparky\'s alarm shriek — three piercing tones, aimed BEHIND THEM.'],
+    ['horror','it moves like spilled oil. it has learned the shape of the ducts. it has learned the shape of HER.'],
+    ['koko','Sparky — floodlight — NOW.'],
+    ['narr','Beetle wings snap open. A tiny drone burns its entire power cell in one white-hot flare, and the thing SCREAMS backwards into the dark, and the sweep drones find their eyes.'],
+    ['katie','[incident log] Specimen contained. Two injuries, zero dead. Recommend commendation: K. Kolczyński. Recommend raise: denied, she keeps refusing to invoice me.'],
+    ['rook','[docking log] Kid did good. Ship\'s fine. Everything\'s fine. Buying her a real toolkit and if anyone asks it fell off a truck.'],
+  ]},
+{ id:'ch8', title:'Docking Permits & Other Lies', cond:'Complete 10 psych evals', test:s=>s.mindDays>=10,
+  scene:[
+    ['narr','Station gossip says Administrator Wagner has cited the Peregrine forty-one times without ever collecting a fine. Station gossip has theories.'],
+    ['katie','Your permit expired five years ago, Henry.'],
+    ['rook','And yet my ship\'s still here.'],
+    ['katie','And yet your ship is still here.'],
+    ['narr','A silence with a great deal of cargo in it.'],
+    ['rook','...You could just impound her. Any other captain, you\'d have impounded.'],
+    ['katie','Any other captain doesn\'t offload half his "spoiled" ration crates to the lower decks every run and pretend I don\'t notice.'],
+    ['koko','[whispering, from behind a girder] Sparky, are they going to kiss or file paperwork?'],
+    ['narr','Sparky answers with a hushed, descending womp-womp. He has a "paperwork" tone. He has needed a "paperwork" tone for as long as these two have known each other.'],
+    ['katie','Renew the permit, Henry. Or don\'t. I\'ll be at inspection on Thursday either way.'],
+    ['narr','She leaves. Rook stares at the empty causeway like a man who has missed something enormous, and knows it, and cannot find the edge of it.'],
+  ]},
+{ id:'ch9', title:'Signal in the Dark', cond:'14 perfect days total', test:s=>s.fullDays>=14,
+  scene:[
+    ['narr','They thought there was one. There were eggs.'],
+    ['horror','the second one does not scratch. the second one LISTENS. it has been in the walls for weeks, learning voices. katie\'s voice. rook\'s voice.'],
+    ['horror','koko\'s voice.'],
+    ['narr','Deck 7, night cycle. Koko hears herself calling for help from inside maintenance shaft twelve — her own voice, pitch-perfect, weeping.'],
+    ['koko','That\'s... that\'s me. Sparky, that\'s MY voice.'],
+    ['narr','Sparky runs the voiceprint and projects it on the bulkhead: MATCH 99.2%. Then he presses one cold little leg against her ankle. She is here. She is not in that shaft.'],
+    ['koko','Then we don\'t answer it.'],
+    ['horror','then the voice stops weeping. and says, flatly: "clever."'],
+    ['narr','What saves her isn\'t luck. It\'s everyone. Rook, sealing the shaft with the Peregrine\'s plasma cutter, snarling at anything that threatens his engineer. Katie, wings blazing, leading security in person. Gary, back early, putting three tranq harpoons through the dark without blinking.'],
+    ['gary','You okay? You\'re okay. Good. That\'s— good.'],
+    ['narr','He\'s still holding her shoulder. Neither of them mentions it. Sparky logs it.'],
+  ]},
+{ id:'ch10', title:'Orbit', cond:'21 perfect days total', test:s=>s.fullDays>=21,
+  scene:[
+    ['narr','The observation deck on level 30 is where the station keeps its one luxury: a window the size of a cathedral wall, full of stars.'],
+    ['gary','I leave tomorrow. Skip-trace out to the Meridian shallows, two weeks maybe.'],
+    ['koko','I know. You always leave Tuesdays.'],
+    ['gary','You know my schedule?'],
+    ['koko','You knew my name.'],
+    ['narr','The station turns. Light crawls across the window. Somewhere below them, Rook is pretending to fix a thruster while Katie pretends to cite him for it; somewhere in the dark decks, sealed things sleep and the station holds its breath and holds.'],
+    ['gary','When I\'m back... show me the parts of the station only engineers know?'],
+    ['koko','Only if you bring your ship. Your clamps sound terrible.'],
+    ['narr','From a railing nearby, very quietly, a tiny drone plays an ascending trill. Twice. Both heart rates elevated. Logged. Goal met. Goal very met.'],
+    ['narr','END OF ARC ONE. Keep your signal strong, Koko. The station isn\'t done with you.'],
+  ]},
+];
+const SPEAKERS={koko:'KOKO', rook:'ROOK', katie:'KATIE', sparky:'SPARKY', gary:'GARY', other:'???', horror:'▓▓▓', narr:''};
+
+/* ═══════════════ DOCKSIDE RUN-INS ═══════════════
+   Journaling = Koko writing up the courage to talk to Gary.
+   Each journaled day advances the counter; no recent journal -> his cutter doesn't dock. */
+const GARY_EVENTS=[
+{ id:'g1', need:1, title:'Nod Count: One',
+  scene:[
+    ['narr','Journal entry one. Koko writes half a page about intermix ratios and one sentence about something else.'],
+    ['koko','[journal] The bounty hunter nodded at me on the causeway today. I nodded back. I think it was normal. It was probably normal.'],
+    ['narr','Sparky peers over her shoulder and produces four slow, judgmental clicks. One per rewrite of that last sentence.'],
+    ['koko','It\'s a technical log, Sparky. Precision matters.'],
+  ]},
+{ id:'g2', need:2, title:'The Wrench Thing',
+  scene:[
+    ['narr','His cutter is in again. Koko is carrying too many tools past berth nine, because it is the shortest route, which is a lie.'],
+    ['narr','The 12-mil wrench slips. It doesn\'t hit the deck. Gary catches it without looking up from his manifest.'],
+    ['gary','Yours.'],
+    ['koko','Yep. Mine. Thanks. Good catch. Great reflexes. Bye.'],
+    ['koko','[journal, later] "Great reflexes"?? WHO SAYS THAT. Anyway. He was there today.'],
+  ]},
+{ id:'g3', need:3, title:'Four Credits',
+  scene:[
+    ['narr','Three entries in. Courage compounds like interest.'],
+    ['gary','Hey — clamp engineer. Docking fee\'s still four credits down. You ever take payment? Coffee, parts, anything?'],
+    ['koko','I— sure. Parts. Coffee. Either. Both is also a number.'],
+    ['gary','[grinning] Both is also a number. Okay.'],
+    ['narr','From inside her satchel, muffled, a tiny private fanfare. Milestone logged: a full sentence, delivered to Gary, in the correct order.'],
+  ]},
+{ id:'g4', need:5, title:'The Noodle Stand',
+  scene:[
+    ['narr','Deck 5 noodle stand, end of shift. Koko is two credits short and pretending she wasn\'t hungry anyway.'],
+    ['gary','Put hers on mine, Chen. — Don\'t make it weird, it\'s the four credits I owe you. Now we\'re square.'],
+    ['koko','We\'re square.'],
+    ['narr','They eat standing up, at the counter, in a silence that is somehow not awkward at all.'],
+    ['koko','[journal] We\'re not square. I recounted. He overpaid by one credit. I\'m keeping it forever.'],
+  ]},
+{ id:'g5', need:7, title:'Sparky\'s Fan',
+  scene:[
+    ['narr','A week of entries. The courage folder is getting thick.'],
+    ['gary','Wait — you BUILT that? From scrap? The wings fold and everything?'],
+    ['narr','Sparky unfurls his beetle wings with entirely unnecessary drama and a rising showman\'s flourish of chimes.'],
+    ['gary','That\'s the coolest thing on this station.'],
+    ['narr','On the private wrist-channel: a soft approving warble. Then the opening notes of the telemetry-alert trill.'],
+    ['koko','[private channel] MUTE.'],
+  ]},
+{ id:'g6', need:10, title:'The Wanted Board',
+  scene:[
+    ['narr','She finally asks about the bounty work. He talks — carefully, like someone who\'s been asked before by people who wanted a show.'],
+    ['gary','Mostly it\'s waiting. Reading dock manifests. Knowing when someone\'s lying. The trick isn\'t catching people. It\'s noticing them.'],
+    ['koko','Is that why you noticed the clamps? Nobody notices clamp maintenance.'],
+    ['gary','I notice good work.'],
+    ['narr','An hour goes by. Neither of them clocks it.'],
+    ['koko','[journal] He said "I notice good work." This journal is a technical log and that quote is technical information.'],
+  ]},
+{ id:'g7', need:14, title:'Clamp Inspection',
+  scene:[
+    ['narr','His cutter\'s port clamp is grinding. She fixes it. He doesn\'t hover — he hands her tools, right ones, right order, like they\'ve done this a hundred times.'],
+    ['gary','You always hum when it\'s going well. You go quiet when it\'s not.'],
+    ['koko','...You noticed that?'],
+    ['gary','It\'s the job. — No. That one wasn\'t the job.'],
+    ['narr','Comfortable silence, the rarest alloy on the station. They machine it together for two hours.'],
+  ]},
+{ id:'g8', need:18, title:'Tuesday',
+  scene:[
+    ['narr','He\'s shipping out. Pre-flight done, ramp up, engines warm. He pauses at the airlock.'],
+    ['gary','See you Tuesday, Koko.'],
+    ['narr','Not "see you around". Not "next time I dock". Tuesday. A specific day. Her name. The airlock closes on a young man smiling at his own boots.'],
+    ['koko','[journal] TUESDAY. As in, a plan. As in—'],
+    ['narr','Sparky projects her Tuesday schedule onto the wall. It has been pre-emptively cleared.'],
+    ['koko','[journal] Sparky stays home Tuesday.'],
+    ['narr','A long, aggrieved, descending buzz. Appeal filed.'],
+  ]},
+];
+
+/* ═══════════════ ACHIEVEMENTS ═══════════════ */
+const ACH=[
+  {id:'first',   icon:'📡', name:'First Transmission', cond:'log anything once', test:s=>s.any},
+  {id:'full1',   icon:'✅', name:'Perfect Cycle', cond:'all 3 goals in a day', test:s=>s.fullDays>=1},
+  {id:'streak3', icon:'⚡', name:'Three in a Row', cond:'3-day streak', test:s=>s.best>=3},
+  {id:'streak7', icon:'🔥', name:'One Full Week', cond:'7-day streak', test:s=>s.best>=7},
+  {id:'kcal10',  icon:'🍜', name:'Well Fed', cond:'10 eating goals', test:s=>s.kcalDays>=10},
+  {id:'move10',  icon:'🔧', name:'Dock Muscle', cond:'10 exercise goals', test:s=>s.moveDays>=10},
+  {id:'mind10',  icon:'🧠', name:'Clear Signal', cond:'10 psych evals', test:s=>s.mindDays>=10},
+  {id:'full21',  icon:'🌟', name:'Station Legend', cond:'21 perfect days', test:s=>s.fullDays>=21},
+  {id:'phoenix', icon:'🕯️', name:'Back from the Dark', cond:'recover from CRITICAL', test:s=>s.recovered},
+  {id:'journal7', icon:'📓', name:'Dear Diary', cond:'7 journal entries', test:s=>s.jDays>=7},
+  {id:'journal18',icon:'💚', name:'Tuesday Person', cond:'18 journal entries', test:s=>s.jDays>=18},
+];
+
+/* ═══════════════ RENDERING ═══════════════ */
+function ringSet(id, frac){
+  const C=157;
+  document.getElementById(id).style.strokeDashoffset = C - C*Math.max(0,Math.min(1,frac));
+}
+/* Sparky doesn't talk — beeps, chimes, wing-flutters only. These lines narrate him. */
+const SPARKY_LINES={
+  0:['Two bright chimes — the all-clear. He polishes his front legs for no reason.','A contented idle hum. The station feed is clean today and he knows it.','He taps the shelf twice: the "you promised me a new capacitor" reminder. He remembers everything.'],
+  1:['A short static-warning click. One lens stays fixed on the deck feed.','He hovers closer than usual and offers a soft, questioning chirp. Rations? Nap? Both?','He ran his self-check twice. The second one was just for comfort.'],
+  2:['Low, uneasy triple-clicks. The feed is getting worse and he knows you know.','His wings half-open at nothing. He keeps swiveling toward the low channels.','An insistent chime against your wrist: log the goals. The station notices. He can hear it noticing.'],
+  3:['A thin, wavering whine. He can\'t see the dark parts of the deck anymore.','His lamp stutters. Something is walking his antenna range and he cannot find it.','Three sharp tones, over and over, aimed at bay 4. Don\'t go near bay 4. Don\'t go n̸e̷a̴r̵—'],
+};
+const DIRECTIVES=[
+  'Hold all three goals today and the deck lights stay warm. Katie\'s orders.',
+  'Rook needs a hand on the Peregrine later — show up fed and stretched.',
+  'Gary docks Tuesday. Not that anyone is counting cycles. (Sparky is.)',
+  'Security asks residents to log psych evals daily. Unstable minds hear the walls.',
+  'Ration hall special: dumpling synth-broth. Katie says you WILL eat.',
+];
+function render(){
+  today = loadDay(todayKey());
+  const s0 = stats();
+  s0.any = today.kcal>0||today.move>0||today.mood>0 || s0.fullDays>0 || s0.kcalDays>0 || s0.moveDays>0 || s0.mindDays>0;
+  s0.best = meta.bestStreak;
+  const sig = computeSignal();
+  const tier = meta.cfg.horror ? signalTier(sig) : 0;
+  s0.recovered = !!meta.recoveredOnce;
+  if(signalTier(sig)===3) { meta.wasCritical=true; saveMeta(meta); }
+  if(meta.wasCritical && signalTier(sig)<=1){ meta.recoveredOnce=true; meta.wasCritical=false; saveMeta(meta); s0.recovered=true; }
+  curTier = tier;
+  document.body.classList.remove('g1','g2','g3');
+  if(tier>0) document.body.classList.add('g'+tier);
+
+  // date + streak
+  const d=new Date();
+  document.getElementById('deck-date').textContent =
+    d.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}).toUpperCase() + ' // CYCLE ' + todayKey().replaceAll('-','.');
+  document.getElementById('streak-count').textContent = s0.streak;
+
+  // signal
+  const info=TIER_INFO[signalTier(sig)];
+  const bar=document.getElementById('signal-bar');
+  bar.style.width=sig+'%';
+  bar.style.background=`linear-gradient(90deg, ${info.color}55, ${info.color})`;
+  bar.style.boxShadow=`0 0 12px ${info.color}66`;
+  const st=document.getElementById('signal-status');
+  st.textContent = sig+'% '+info.label; st.style.color=info.color;
+  document.getElementById('signal-note').textContent = info.note;
+
+  // shift forecast card
+  const L = kcalLimit(today);
+  const fs=document.getElementById('fc-status'), fn=document.getElementById('fc-note');
+  if(today.forecast!=null){
+    const f=FORECAST[today.forecast];
+    fs.textContent=f.name.toUpperCase()+' // '+f.kcal+' KCAL'; fs.style.color='var(--teal)';
+    fn.textContent='Filed. Exertion logs are audited against this claim at day\'s end. Tap to amend.';
+  } else {
+    fs.textContent='NOT FILED'; fs.style.color='var(--amber)';
+    fn.textContent='Sparky is waiting for today\'s exercise forecast. It books your ration limit. Tap to file.';
+  }
+  // morning audit of yesterday's claim (once per day)
+  if(meta.lastReview!==todayKey()){
+    meta.lastReview=todayKey(); saveMeta(meta);
+    const y=loadDay(keyOffset(1));
+    if(y.forecast!=null){
+      const diff=y.forecast-achievedLvl(y);
+      if(diff>0) setTimeout(()=>showToast('audit failed: you claimed "'+FORECAST[y.forecast].name+'" and logged '+(y.move||0)+' min. the station remembers.', true), 900);
+      else setTimeout(()=>showToast('◈ FORECAST AUDIT PASSED — yesterday\'s ration limit was honest. Signal holds.'), 900);
+    }
+  }
+  // prompt for today's forecast once per day
+  if(meta.booted && today.forecast==null && meta.fcPrompt!==todayKey()){
+    meta.fcPrompt=todayKey(); saveMeta(meta);
+    setTimeout(openForecast, 500);
+  }
+
+  // rings
+  ringSet('ring-kcal', today.kcal/L);
+  ringSet('ring-move', today.move/meta.cfg.move);
+  ringSet('ring-mind', today.mood>0?1:0);
+  const vk=document.getElementById('val-kcal');
+  vk.textContent = today.kcal;
+  vk.style.color = today.kcal > L*1.1 ? 'var(--danger)' : 'var(--teal)';
+  document.getElementById('sub-kcal').textContent = '/ '+L+' kcal'+(today.forecast!=null?' · '+FORECAST[today.forecast].name:'');
+  document.getElementById('val-move').textContent = today.move+'m';
+  document.getElementById('sub-move').textContent = '/ '+meta.cfg.move+' min';
+  document.getElementById('val-mind').textContent = today.mood>0?['','🌑','🌘','🌗','🌔','🌕'][today.mood]:'—';
+  setMet('met-kcal', goalKcal(today)); setMet('met-move', goalMove(today)); setMet('met-mind', goalMind(today));
+
+  // sparky
+  const lines=SPARKY_LINES[tier];
+  document.getElementById('sparky-line').textContent = lines[(d.getDate()+d.getHours())%lines.length];
+  document.getElementById('sparky-mood').textContent = ['// nominal','// uneasy','// scared','// s̷i̶g̸n̵a̷l̶ ̸l̵o̷s�kzzt'][tier];
+  document.getElementById('directive-text').textContent = DIRECTIVES[d.getDate()%DIRECTIVES.length];
+
+  renderChapters(s0); renderCrew(s0); renderRecords(s0, sig);
+  checkAch(s0);
+}
+function setMet(id, met){
+  const e=document.getElementById(id);
+  e.textContent = met ? '◈ GOAL MET' : '';
+  e.style.color = 'var(--teal)';
+}
+
+/* chapters */
+function renderChapters(s){
+  const list=document.getElementById('chapter-list');
+  let unlocked=0;
+  list.innerHTML = CHAPTERS.map((c,i)=>{
+    const open=c.test(s); if(open)unlocked++;
+    const read=meta.read.includes(c.id);
+    const cls = !open?'locked':(read?'':'unread');
+    const badge = !open?'<span class="chapter-badge cb-locked">LOCKED</span>':(read?'<span class="chapter-badge cb-read">READ</span>':'<span class="chapter-badge cb-new">NEW</span>');
+    return `<div class="chapter-card ${cls}" onclick="${open?`openVN('${c.id}')`:''}">
+      ${badge}<div class="chapter-num">ENTRY ${String(i+1).padStart(2,'0')}</div>
+      <div class="chapter-title glitchable">${open?c.title:'▓▓▓▓▓▓▓'}</div>
+      <div class="chapter-cond">${open?'':'⬡ '}${c.cond}</div></div>`;
+  }).join('');
+  // dockside run-ins — the Gary track, fuelled by journal entries
+  const docked=s.garyDocked;
+  let runins = `<div class="section-head" style="margin-top:22px;">Dockside Run-ins // Gary</div>
+    <div class="signal-note" style="margin-bottom:10px;">${docked
+      ? '● CUTTER DOCKED — bay nine. You\'ve been journaling. You have reasons to walk past bay nine.'
+      : '○ OFF-STATION — no journal entries in 3 cycles, no reason to dock. Write a line with your psych eval and his cutter finds a reason.'}</div>`;
+  GARY_EVENTS.forEach((c,i)=>{
+    const open = s.jDays>=c.need;
+    const read=meta.read.includes(c.id);
+    const cls = !open?'locked':(read?'':'unread');
+    const badge = !open?'<span class="chapter-badge cb-locked">LOCKED</span>':(read?'<span class="chapter-badge cb-read">READ</span>':'<span class="chapter-badge cb-new">NEW</span>');
+    runins += `<div class="chapter-card ${cls}" style="border-left-color:${open?'#c8e07a':'var(--border)'}" onclick="${open?`openVN('${c.id}')`:''}">
+      ${badge}<div class="chapter-num">RUN-IN ${String(i+1).padStart(2,'0')}</div>
+      <div class="chapter-title glitchable">${open?c.title:'▓▓▓▓▓▓▓'}</div>
+      <div class="chapter-cond">${open?'':'⬡ '}journal ${c.need} day${c.need>1?'s':''} total</div></div>`;
+  });
+  list.insertAdjacentHTML('beforeend', runins);
+  document.getElementById('story-count').textContent = unlocked+'/'+CHAPTERS.length;
+}
+let vnScene=null, vnIdx=0;
+function openVN(id){
+  const c=CHAPTERS.find(x=>x.id===id) || GARY_EVENTS.find(x=>x.id===id); if(!c)return;
+  vnScene=c; vnIdx=0;
+  document.getElementById('vn-title').textContent = CHAPTERS.includes(c)
+    ? 'ENTRY '+String(CHAPTERS.indexOf(c)+1).padStart(2,'0')+' — '+c.title
+    : 'RUN-IN '+String(GARY_EVENTS.indexOf(c)+1).padStart(2,'0')+' — '+c.title;
+  document.getElementById('vn-body').innerHTML='';
+  document.getElementById('vn-overlay').classList.add('open');
+  if(!meta.read.includes(id)){ meta.read.push(id); saveMeta(meta); }
+  vnNext();
+}
+function vnNext(){
+  const body=document.getElementById('vn-body');
+  const old=body.querySelector('.vn-next'); if(old)old.remove();
+  if(vnIdx>=vnScene.scene.length){
+    body.insertAdjacentHTML('beforeend','<button class="vn-next" onclick="closeVN()">◈ CLOSE LOG</button>');
+    render(); return;
+  }
+  const [sp,text]=vnScene.scene[vnIdx++];
+  const isNarr=sp==='narr';
+  body.insertAdjacentHTML('beforeend',
+    `<div class="vn-line ${isNarr?'vn-narr':''}">${isNarr?'':`<div class="vn-speaker sp-${sp}">${SPEAKERS[sp]}</div>`}<div class="vn-text">${text}</div></div>
+     `);
+  body.insertAdjacentHTML('beforeend','<button class="vn-next" onclick="vnNext()">▸</button>');
+  body.scrollTop=body.scrollHeight;
+}
+function closeVN(){ document.getElementById('vn-overlay').classList.remove('open'); render(); }
+
+/* crew */
+const CREW=[
+  {id:'sparky', icon:'🕷️', name:'SPARKY', role:'Companion drone // Koko built him from scraps', color:'#7ec8ff',
+   stat:'mindDays', per:10, hint:'He doesn\'t talk — only beeps, chimes and wing-flutters. Psych evals keep his signal warm.'},
+  {id:'rook', icon:'🚬', name:'HENRY ROOK', role:'Captain, the Peregrine // not yet met', color:'#e08a4a',
+   stat:'rookDays', per:10, hint:'Unlock him with discipline: days where BOTH the exercise and diet goals are met. Dock work earns dock respect.'},
+  {id:'katie', icon:'🧚', name:'KATIE WAGNER', role:'Station administrator // not yet met', color:'#ff7a9e',
+   stat:'careDays', per:10, hint:'Unlock her with the daily care routine — skin routine + brushed teeth. Katie looks after people who look after themselves.'},
+  {id:'gary', icon:'🎯', name:'GARY', role:'Bounty hunter // docks on Tuesdays', color:'#c8e07a',
+   stat:'jDays', per:8, hint:'Bond grows with journal entries — every line is Koko talking herself into saying hi.'},
+];
+const BOND_NAMES=['Stranger','Acquaintance','Ally','Friend','Trusted','Inseparable'];
+function renderCrew(s){
+  document.getElementById('crew-list').innerHTML = CREW.map(c=>{
+    const v=s[c.stat]||0;
+    const lvl=Math.min(5, Math.floor(v/c.per*2.5));
+    const frac=Math.min(1, v/(c.per*2));
+    let bond = BOND_NAMES[lvl];
+    if(c.id==='sparky') bond='Loyal Companion';                    // she built him; he was never a stranger
+    else if(v===0) bond='Stranger — not yet met';
+    let role=c.role;
+    if((c.id==='rook'||c.id==='katie') && v>0) role=role.replace(' // not yet met', c.id==='rook'?' // grumpy diamond':' // half-fairy');
+    return `<div class="crew-card">
+      <div class="crew-avatar">${v===0&&(c.id==='rook'||c.id==='katie')?'❓':c.icon}</div>
+      <div class="crew-info">
+        <div class="crew-name glitchable" style="color:${c.color}">${v===0&&(c.id==='rook'||c.id==='katie')?'▓▓▓▓▓':c.name}</div>
+        <div class="crew-role">${role}</div>
+        <div class="crew-bond-wrap"><div class="crew-bond" style="width:${frac*100}%;background:${c.color}"></div></div>
+        <div class="crew-bond-label">BOND: ${bond}</div>
+        <div class="crew-hint">${c.hint}</div>
+        ${c.id==='gary' ? `<div class="crew-bond-label" style="margin-top:5px;color:${s.garyDocked?'var(--teal)':'var(--text-dim)'}">${s.garyDocked?'● CUTTER DOCKED — bay nine':'○ OFF-STATION — journal to give him a reason'}</div>`:''}
+      </div></div>`;
+  }).join('');
+}
+
+/* records */
+function renderRecords(s, sig){
+  const gb=document.getElementById('bars-goals');
+  let g='';
+  for(let i=6;i>=0;i--){
+    const d=loadDay(keyOffset(i)); const n=goalsMet(d);
+    const day=new Date(); day.setDate(day.getDate()-i);
+    const col=n===3?'var(--teal)':n===2?'var(--amber)':n===1?'#8a5f22':'#26333a';
+    g+=`<div class="bar-col"><div class="bar" style="height:${Math.max(4,n/3*100)}%;background:${col}"></div><div class="bar-day">${'SMTWTFS'[day.getDay()]}</div></div>`;
+  }
+  gb.innerHTML=g;
+  // signal history: recompute approximation per day is heavy; show stored snapshots
+  let hist={}; try{ hist=JSON.parse(localStorage.getItem('ksd_sig'))||{}; }catch(e){}
+  hist[todayKey()]=sig; localStorage.setItem('ksd_sig', JSON.stringify(hist));
+  let sgb='';
+  for(let i=6;i>=0;i--){
+    const v=hist[keyOffset(i)];
+    const day=new Date(); day.setDate(day.getDate()-i);
+    const col=v==null?'#1a242b':TIER_INFO[signalTier(v)].color;
+    sgb+=`<div class="bar-col"><div class="bar" style="height:${v==null?4:Math.max(6,v)}%;background:${col}"></div><div class="bar-day">${'SMTWTFS'[day.getDay()]}</div></div>`;
+  }
+  document.getElementById('bars-signal').innerHTML=sgb;
+  document.getElementById('ach-grid').innerHTML = ACH.map(a=>{
+    const un=meta.ach.includes(a.id);
+    return `<div class="ach-card ${un?'unlocked':'locked'}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-cond">${a.cond}</div></div>`;
+  }).join('');
+}
+function checkAch(s){
+  let newly=[];
+  ACH.forEach(a=>{ if(!meta.ach.includes(a.id) && a.test(s)){ meta.ach.push(a.id); newly.push(a); } });
+  if(newly.length){ saveMeta(meta); newly.forEach((a,i)=>setTimeout(()=>showToast('◈ COMMENDATION: '+a.name),600+i*1800)); }
+  CHAPTERS.forEach(c=>{ if(c.test(s) && !meta.read.includes(c.id) && !meta['notif_'+c.id]){ meta['notif_'+c.id]=true; saveMeta(meta); setTimeout(()=>showToast('▤ NEW LOGBOOK ENTRY: '+c.title), 400); } });
+  GARY_EVENTS.forEach(c=>{ if(s.jDays>=c.need && s.garyDocked && !meta.read.includes(c.id) && !meta['notif_'+c.id]){ meta['notif_'+c.id]=true; saveMeta(meta); setTimeout(()=>showToast('✧ A CUTTER JUST DOCKED AT BAY NINE — run-in: '+c.title), 1200); } });
+}
+
+/* ═══════════════ FORECAST MODAL ═══════════════ */
+let pickedFc=null;
+function openForecast(){
+  pickedFc = today.forecast!=null ? today.forecast : null;
+  document.getElementById('fc-options').innerHTML = FORECAST.map((f,i)=>`
+    <div class="fc-opt ${pickedFc===i?'sel':''}" id="fc-opt-${i}" onclick="pickFc(${i})">
+      <div style="display:flex;justify-content:space-between;gap:8px;">
+        <span style="font-family:'Oxanium';font-weight:700;font-size:13px;color:var(--text);">${f.name}</span>
+        <span style="color:var(--amber);font-size:12px;white-space:nowrap;">${f.kcal} kcal</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:4px;line-height:1.55;">${f.desc}</div>
+    </div>`).join('');
+  document.getElementById('fc-modal').classList.add('open');
+}
+function pickFc(i){ pickedFc=i; FORECAST.forEach((_,j)=>document.getElementById('fc-opt-'+j).classList.toggle('sel', j===i)); }
+function confirmForecast(){
+  if(pickedFc==null){ showToast('Pick an activity level first'); return; }
+  today.forecast=pickedFc; saveDay(todayKey(), today);
+  document.getElementById('fc-modal').classList.remove('open');
+  showToast('◈ Forecast filed: '+FORECAST[pickedFc].name+' — ration limit '+FORECAST[pickedFc].kcal+' kcal');
+  render();
+}
+function closeForecast(e){ if(e && e.target!==e.currentTarget)return; document.getElementById('fc-modal').classList.remove('open'); }
+
+/* ═══════════════ LOGGING ═══════════════ */
+let logType='meal', pickedMood=0;
+const LOG_COPY={
+  meal:{t:'LOG RATIONS', s:'Real meals, real schedule. What did you eat? (kcal)'},
+  move:{t:'LOG EXERTION', s:'Deck work, gym, walking the causeways — active minutes.'},
+  mind:{t:'PSYCH EVAL', s:'How\'s the signal in your head today? Be honest. Sparky worries.'},
+  care:{t:'CARE ROUTINE', s:'Crew who maintain themselves maintain the station. Tick what\'s done today.'},
+};
+function openLog(type){
+  logType=type; pickedMood=today.mood||0;
+  document.getElementById('log-title').textContent=LOG_COPY[type].t;
+  document.getElementById('log-sub').textContent=LOG_COPY[type].s;
+  ['meal','move','mind','care'].forEach(t=>document.getElementById('log-'+t+'-body').style.display = t===type?'block':'none');
+  if(type==='meal')document.getElementById('log-kcal-input').value='';
+  if(type==='move')document.getElementById('log-move-input').value='';
+  if(type==='care'){
+    document.getElementById('care-skin').classList.toggle('sel', !!today.careSkin);
+    document.getElementById('care-teeth').classList.toggle('sel', !!today.careTeeth);
+  }
+  if(type==='mind'){
+    document.getElementById('log-journal-input').value=today.journal||'';
+    document.querySelectorAll('.mood-btn').forEach(b=>b.classList.toggle('sel', +b.dataset.m===pickedMood));
+  }
+  document.getElementById('log-modal').classList.add('open');
+}
+function setKcal(v){ document.getElementById('log-kcal-input').value=v; }
+function setMove(v){ document.getElementById('log-move-input').value=v; }
+function pickMood(m,btn){ pickedMood=m; document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); }
+function confirmLog(){
+  if(logType==='meal'){
+    const v=+document.getElementById('log-kcal-input').value||0;
+    if(v<=0){showToast('Enter kcal first');return;}
+    today.kcal+=v; showToast('🍜 +'+v+' kcal logged');
+  } else if(logType==='move'){
+    const v=+document.getElementById('log-move-input').value||0;
+    if(v<=0){showToast('Enter minutes first');return;}
+    today.move+=v; showToast('🔧 +'+v+' min exertion logged');
+  } else if(logType==='care'){
+    today.careSkin=document.getElementById('care-skin').classList.contains('sel');
+    today.careTeeth=document.getElementById('care-teeth').classList.contains('sel');
+    if(!today.careSkin && !today.careTeeth){showToast('Tick at least one');return;}
+    showToast(today.careSkin&&today.careTeeth ? '🧴 Full care routine logged. Somewhere, an administrator nods.' : '🧴 Logged. The full routine (skin + teeth) is what counts for Katie.');
+  } else {
+    if(!pickedMood){showToast('Pick a mood first');return;}
+    today.mood=pickedMood; today.journal=document.getElementById('log-journal-input').value||'';
+    showToast('🧠 Psych eval transmitted. Sparky approves.');
+  }
+  saveDay(todayKey(), today);
+  closeLog(); render();
+}
+function closeLog(e){ if(e && e.target!==e.currentTarget)return; document.getElementById('log-modal').classList.remove('open'); }
+
+/* ═══════════════ MISC ═══════════════ */
+function switchTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  document.getElementById('nav-'+tab).classList.add('active');
+  render();
+}
+let toastTimer=null;
+function showToast(msg, horror){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=horror?'horror show':'show';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'), horror?4200:2600);
+}
+function saveCfg(){
+  meta.cfg.kcal=Math.max(800,+document.getElementById('cfg-kcal').value||2000);
+  meta.cfg.move=Math.max(5,+document.getElementById('cfg-move').value||30);
+  meta.cfg.horror=document.getElementById('cfg-horror').checked;
+  saveMeta(meta); render(); showToast('⚙ Configuration saved');
+}
+function wipeData(){
+  if(!confirm('Purge ALL terminal data? This wipes every log, chapter, and commendation.'))return;
+  Object.keys(localStorage).filter(k=>k.startsWith('ksd_')).forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
+
+/* ═══════════════ BOOT ═══════════════ */
+const BOOT_LINES=[
+  '> KSD TERMINAL 7-G // salvage boot v0.9',
+  '> auth ........ BYPASSED (nice work, koko)',
+  '> station feed ........ CONNECTED',
+  '> SPARKY uplink ........ ONLINE',
+  '> health telemetry ........ ARMED',
+  '> horror suppression ........ <span style="color:#ff4a5e">FAILED</span>',
+  '> welcome back, stowaway.',
+];
+function runBoot(){
+  const log=document.getElementById('boot-log');
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>=BOOT_LINES.length){ clearInterval(iv); document.getElementById('boot-btn').style.display='inline-block'; return; }
+    log.innerHTML+=BOOT_LINES[i++]+'<br>';
+  }, 320);
+}
+function finishBoot(){
+  document.getElementById('boot').classList.add('hidden');
+  meta.booted=true; saveMeta(meta);
+  render();
+}
+/* PWA: register the service worker (skipped on file:// where SWs aren't available) */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+document.getElementById('cfg-kcal').value=meta.cfg.kcal;
+document.getElementById('cfg-move').value=meta.cfg.move;
+document.getElementById('cfg-horror').checked=meta.cfg.horror;
+if(meta.booted){ document.getElementById('boot').classList.add('hidden'); render(); }
+else runBoot();
+</script>
+</body>
+</html>
