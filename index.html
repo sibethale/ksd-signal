@@ -519,6 +519,15 @@
         <div><div class="sys-label">Horror effects</div><div class="sys-sub">interface degradation when signal drops</div></div>
         <input type="checkbox" id="cfg-horror" checked onchange="saveCfg()" style="width:20px;height:20px;accent-color:#3ee6c1;">
       </div>
+      <div class="sys-row" style="flex-direction:column;align-items:stretch;gap:9px;">
+        <div>
+          <div class="sys-label">Narrator uplink — free AI narration</div>
+          <div class="sys-sub">paste a free Gemini API key from aistudio.google.com and the station starts writing itself around your real days. blank = hand-written content only. the key never leaves this device.</div>
+        </div>
+        <input class="modal-input" style="margin:0;" type="password" id="cfg-aikey" placeholder="AIza..." onchange="saveCfg()">
+        <button class="chip" style="text-align:center;" onclick="testAI()">⟲ TEST UPLINK</button>
+        <div class="sys-sub" id="ai-status"></div>
+      </div>
       <button class="sys-btn" onclick="wipeData()">⚠ PURGE ALL TERMINAL DATA</button>
       <div style="font-size:9px;color:var(--text-dim);margin-top:14px;text-align:center;letter-spacing:1px;">
         KSD//SIGNAL v1.0 — unregistered terminal, deck 7<br>data stays on this device
@@ -766,7 +775,11 @@ function glitchTick(){
   if(!meta.cfg.horror || curTier===0) return;
   const p=[0, 0.08, 0.25, 0.45][curTier];
   if(Math.random()<(flatline?0.8:p)) glitchBurst(flatline?4:curTier);
-  if(curTier>=2 && Math.random()<(flatline?0.15:0.08)) showToast(HORROR_MSGS[Math.floor(Math.random()*HORROR_MSGS.length)], true);
+  if(curTier>=2 && Math.random()<(flatline?0.15:0.08)){
+    const b=loadBundle();
+    const pool=(b && Array.isArray(b.whispers) && b.whispers.length) ? b.whispers.concat(HORROR_MSGS) : HORROR_MSGS;
+    showToast(pool[Math.floor(Math.random()*pool.length)], true);
+  }
   if(curTier===3 && Math.random()<(flatline?0.12:0.06)) horrorFlash();
   if(flatline){
     if(Math.random()<0.40) vRoll();
@@ -999,6 +1012,91 @@ const ACH=[
   {id:'journal18',icon:'💚', name:'Tuesday Person', cond:'18 journal entries', test:s=>s.jDays>=18},
 ];
 
+/* ═══════════════ NARRATOR UPLINK (Gemini free tier) ═══════════════
+   One JSON bundle per day (Sparky lines per tier, directive card, whispers),
+   plus one-time scene personalization at unlock. Hand-written pools are the
+   permanent fallback — no key / offline / bad response = app works as before. */
+const AI_MODEL='gemini-flash-latest';
+const TIER_KEYS=['stable','uneasy','degraded','critical'];
+let aiBusy=false;
+const STORY_BIBLE=`You are the narrator engine of "KSD // Signal", a neo-noir horror sci-fi health app set on the Keppler Space Dock, a vast station of traders, smugglers and stranger things. The player IS Koko (Korrine Kolczynski), 19, a self-taught engineer genius, stowaway, grease-stained, crawls the vents. Cast: SPARKY — her loyal drone, spider-legged with folding beetle wings; he NEVER speaks, only beeps/chimes/wing-flutters (narrate his sounds) or short typed text transmissions prefixed "SPARKY⟩". HENRY ROOK — grumpy 40s captain of the Peregrine, docked at bay twelve; slow-burn friendship; Koko spies on him and pilfers his hold. KATIE WAGNER — station administrator, human-fairy hybrid, kind but firm, feeds the poor decks, posts official directives. GARY — young bounty hunter, docks Tuesdays, boastful in public, quietly homesick and shaken when alone; slow mutual crush with Koko. Horror: creatures escape docked ships' cargo holds; container 88; the thing that mimics voices; the station itself seems to notice things. Rules: address the player as "you" (you are Koko); tone is dry, wry, tender, with creeping dread; horror whispers are lowercase and come ONLY from "SPARKY⟩" transmissions or the impersonal station system; no emoji; keep every line under 200 characters unless asked otherwise; never break character; PG-13 dread, no gore.`;
+function loadBundle(){ try{ return JSON.parse(localStorage.getItem('ksd_ai_'+todayKey())); }catch(e){ return null; } }
+function aiReady(){ return !!(meta.cfg.aiKey) && meta.booted && navigator.onLine; }
+async function aiCall(prompt){
+  const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+AI_MODEL+':generateContent?key='+encodeURIComponent(meta.cfg.aiKey),{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:STORY_BIBLE}]},
+      contents:[{parts:[{text:prompt}]}],
+      generationConfig:{responseMimeType:'application/json', temperature:1.0}
+    })
+  });
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const j=await res.json();
+  const t=j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts[0] && j.candidates[0].content.parts[0].text;
+  if(!t) throw new Error('empty response');
+  return JSON.parse(t);
+}
+function aiContext(s, sig){
+  const y=loadDay(keyOffset(1));
+  const j=(today.journal||y.journal||'').trim();
+  const slot=pickDirective(s, new Date());
+  return 'TODAY ON THE STATION — signal integrity: '+sig+'% ('+TIER_INFO[signalTier(sig)].label+'). Streak: '+s.streak+' days. '
+    +'Yesterday: eating goal '+(goalKcal(y)?'met':'missed')+', exercise '+(goalMove(y)?'met':'missed')+', psych eval '+(goalMind(y)?'done':'skipped')+'. '
+    +'Today so far: '+today.kcal+' kcal, '+today.move+' min exertion, psych eval '+(today.mood>0?'done':'not yet')+'. '
+    +'Rook '+(s.rookDays>0?'has noticed things going missing from his hold and is suspicious':'has no idea Koko watches him from the vents and pilfers his cargo')+'. '
+    +'Gary\'s cutter is '+(s.garyDocked?'docked at bay nine':'away on a skip-trace')+'. Journal days: '+s.jDays+'. '
+    +(j?('Koko\'s latest journal line (weave it in subtly where fitting): "'+j.slice(0,200)+'". '):'')
+    +'The deck card today should be in this voice/register: "'+slot.label+'".';
+}
+async function generateBundle(s, sig){
+  if(aiBusy || loadBundle()) return;
+  aiBusy=true;
+  try{
+    const b=await aiCall(aiContext(s,sig)+'\n\nWrite today\'s ambient content. Return EXACTLY this JSON shape: '
+      +'{"sparky":{"stable":[3 strings],"uneasy":[3 strings],"degraded":[3 strings],"critical":[3 strings]},'
+      +'"directive":{"label":"short ▸-prefixed card header matching the requested voice","text":"the card body, 1-2 sentences"},'
+      +'"whispers":[5 lowercase horror lines, each either a SPARKY⟩ transmission or impersonal station-system text]}. '
+      +'Sparky arrays are third-person narrations of his beeps/behavior reacting to that signal tier and to the player\'s actual goals above.');
+    if(b && b.sparky && TIER_KEYS.every(k=>Array.isArray(b.sparky[k])&&b.sparky[k].length)){
+      localStorage.setItem('ksd_ai_'+todayKey(), JSON.stringify(b));
+      document.getElementById('ai-status').textContent='◈ uplink live — today\'s narration is dynamic';
+      render();
+    }
+  }catch(e){ document.getElementById('ai-status').textContent='uplink failed ('+e.message+') — using archived narration'; }
+  aiBusy=false;
+}
+const VN_SPEAKERS=['narr','koko','rook','katie','gary','other','horror'];
+async function genScene(c){
+  if(!aiReady() || meta.read.includes(c.id) || localStorage.getItem('ksd_scene_'+c.id)) return;
+  try{
+    const s=stats();
+    const b=await aiCall('Here is a canon scene from Koko\'s logbook as [speaker, text] pairs: '+JSON.stringify(c.scene)
+      +'\n\nPlayer context: '+aiContext(s, computeSignal())
+      +'\n\nRewrite this scene keeping every story beat, character voice and outcome, but weave in 1-3 subtle references to the player context (their goals, signal, journal). Same length or slightly longer. Speakers must be from: '+VN_SPEAKERS.join(', ')
+      +'. Sparky never gets a speaker slot — narrate him via "narr". Return EXACTLY: {"scene":[["speaker","text"],...]}');
+    const sc=b && b.scene;
+    if(Array.isArray(sc) && sc.length>=4 && sc.every(l=>Array.isArray(l)&&l.length===2&&typeof l[1]==='string')){
+      const clean=sc.map(l=>[VN_SPEAKERS.includes(l[0])?l[0]:'narr', l[1]]);
+      localStorage.setItem('ksd_scene_'+c.id, JSON.stringify(clean));
+    }
+  }catch(e){/* fallback: hand-written scene */}
+}
+async function testAI(){
+  if(!meta.cfg.aiKey){ showToast('Paste a key first'); return; }
+  document.getElementById('ai-status').textContent='testing uplink...';
+  try{
+    await aiCall('Reply with exactly {"ok":true}');
+    document.getElementById('ai-status').textContent='◈ UPLINK CONFIRMED — narration goes dynamic from tomorrow\'s cycle (or purge today\'s bundle by reloading)';
+    showToast('◈ Narrator uplink confirmed');
+    localStorage.removeItem('ksd_ai_'+todayKey());
+    render();
+  }catch(e){
+    document.getElementById('ai-status').textContent='uplink failed: '+e.message+' — check the key at aistudio.google.com';
+    showToast('Uplink test failed');
+  }
+}
+
 /* ═══════════════ RENDERING ═══════════════ */
 function ringSet(id, frac){
   const C=157;
@@ -1148,13 +1246,18 @@ function render(){
   document.getElementById('val-mind').textContent = today.mood>0?['','🌑','🌘','🌗','🌔','🌕'][today.mood]:'—';
   setMet('met-kcal', goalKcal(today)); setMet('met-move', goalMove(today)); setMet('met-mind', goalMind(today));
 
-  // sparky
-  const lines=SPARKY_LINES[tier];
+  // sparky — prefer today's generated bundle, fall back to the archived lines
+  const bundle=loadBundle();
+  const genLines = bundle && bundle.sparky && bundle.sparky[TIER_KEYS[tier]];
+  const lines = (Array.isArray(genLines)&&genLines.length) ? genLines : SPARKY_LINES[tier];
   document.getElementById('sparky-line').textContent = lines[(d.getDate()+d.getHours())%lines.length];
   document.getElementById('sparky-mood').textContent = ['// nominal','// uneasy','// scared','// s̷i̶g̸n̵a̷l̶ ̸l̵o̷s�kzzt'][tier];
-  const dir = pickDirective(s0, d);
-  document.getElementById('directive-label').textContent = dir.label;
+  const dir = (bundle && bundle.directive && bundle.directive.text) ? bundle.directive : pickDirective(s0, d);
+  document.getElementById('directive-label').textContent = dir.label || '▸ STATION DIRECTIVE';
   document.getElementById('directive-text').textContent = dir.text;
+
+  // narrator uplink: fetch today's bundle once per day, in the background
+  if(aiReady() && !bundle && !aiBusy) generateBundle(s0, sig);
 
   renderChapters(s0); renderCrew(s0); renderRecords(s0, sig);
   checkAch(s0);
@@ -1201,7 +1304,9 @@ function renderChapters(s){
 let vnScene=null, vnIdx=0;
 function openVN(id){
   const c=CHAPTERS.find(x=>x.id===id) || GARY_EVENTS.find(x=>x.id===id); if(!c)return;
-  vnScene=c; vnIdx=0;
+  let scene=c.scene;
+  try{ const g=JSON.parse(localStorage.getItem('ksd_scene_'+id)); if(Array.isArray(g)&&g.length>=4) scene=g; }catch(e){}
+  vnScene={id:c.id, title:c.title, scene}; vnIdx=0;
   document.getElementById('vn-title').textContent = CHAPTERS.includes(c)
     ? 'ENTRY '+String(CHAPTERS.indexOf(c)+1).padStart(2,'0')+' — '+c.title
     : 'RUN-IN '+String(GARY_EVENTS.indexOf(c)+1).padStart(2,'0')+' — '+c.title;
@@ -1293,8 +1398,8 @@ function checkAch(s){
   let newly=[];
   ACH.forEach(a=>{ if(!meta.ach.includes(a.id) && a.test(s)){ meta.ach.push(a.id); newly.push(a); } });
   if(newly.length){ saveMeta(meta); newly.forEach((a,i)=>setTimeout(()=>showToast('◈ COMMENDATION: '+a.name),600+i*1800)); }
-  CHAPTERS.forEach(c=>{ if(c.test(s) && !meta.read.includes(c.id) && !meta['notif_'+c.id]){ meta['notif_'+c.id]=true; saveMeta(meta); setTimeout(()=>showToast('▤ NEW LOGBOOK ENTRY: '+c.title), 400); } });
-  GARY_EVENTS.forEach(c=>{ if(s.jDays>=c.need && s.garyDocked && !meta.read.includes(c.id) && !meta['notif_'+c.id]){ meta['notif_'+c.id]=true; saveMeta(meta); setTimeout(()=>showToast('✧ A CUTTER JUST DOCKED AT BAY NINE — run-in: '+c.title), 1200); } });
+  CHAPTERS.forEach(c=>{ if(c.test(s) && !meta.read.includes(c.id) && !meta['notif_'+c.id]){ meta['notif_'+c.id]=true; saveMeta(meta); setTimeout(()=>showToast('▤ NEW LOGBOOK ENTRY: '+c.title), 400); genScene(c); } });
+  GARY_EVENTS.forEach(c=>{ if(s.jDays>=c.need && s.garyDocked && !meta.read.includes(c.id) && !meta['notif_'+c.id]){ meta['notif_'+c.id]=true; saveMeta(meta); setTimeout(()=>showToast('✧ A CUTTER JUST DOCKED AT BAY NINE — run-in: '+c.title), 1200); genScene(c); } });
 }
 
 /* ═══════════════ FORECAST MODAL ═══════════════ */
@@ -1392,6 +1497,7 @@ function saveCfg(){
   meta.cfg.kcal=Math.max(800,+document.getElementById('cfg-kcal').value||2000);
   meta.cfg.move=Math.max(5,+document.getElementById('cfg-move').value||30);
   meta.cfg.horror=document.getElementById('cfg-horror').checked;
+  meta.cfg.aiKey=document.getElementById('cfg-aikey').value.trim();
   saveMeta(meta); render(); showToast('⚙ Configuration saved');
 }
 function wipeData(){
@@ -1431,6 +1537,8 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
 document.getElementById('cfg-kcal').value=meta.cfg.kcal;
 document.getElementById('cfg-move').value=meta.cfg.move;
 document.getElementById('cfg-horror').checked=meta.cfg.horror;
+document.getElementById('cfg-aikey').value=meta.cfg.aiKey||'';
+if(meta.cfg.aiKey) document.getElementById('ai-status').textContent='◈ key stored — narration goes dynamic each new cycle';
 if(meta.booted){ document.getElementById('boot').classList.add('hidden'); render(); }
 else runBoot();
 </script>
