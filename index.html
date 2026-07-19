@@ -1021,6 +1021,47 @@ const TIER_KEYS=['stable','uneasy','degraded','critical'];
 let aiBusy=false;
 const STORY_BIBLE=`You are the narrator engine of "KSD // Signal", a neo-noir horror sci-fi health app set on the Keppler Space Dock, a vast station of traders, smugglers and stranger things. The player IS Koko (Korrine Kolczynski), 19, a self-taught engineer genius, stowaway, grease-stained, crawls the vents. Cast: SPARKY — her loyal drone, spider-legged with folding beetle wings; he NEVER speaks, only beeps/chimes/wing-flutters (narrate his sounds) or short typed text transmissions prefixed "SPARKY⟩". HENRY ROOK — grumpy 40s captain of the Peregrine, docked at bay twelve; slow-burn friendship; Koko spies on him and pilfers his hold. KATIE WAGNER — station administrator, human-fairy hybrid, kind but firm, feeds the poor decks, posts official directives. GARY — young bounty hunter, docks Tuesdays, boastful in public, quietly homesick and shaken when alone; slow mutual crush with Koko. Horror: creatures escape docked ships' cargo holds; container 88; the thing that mimics voices; the station itself seems to notice things. Rules: address the player as "you" (you are Koko); tone is dry, wry, tender, with creeping dread; horror whispers are lowercase and come ONLY from "SPARKY⟩" transmissions or the impersonal station system; no emoji; keep every line under 200 characters unless asked otherwise; never break character; PG-13 dread, no gore.`;
 function loadBundle(){ try{ return JSON.parse(localStorage.getItem('ksd_ai_'+todayKey())); }catch(e){ return null; } }
+/* ── narrator memory: chronicle (raw recent days) + saga (AI-compacted past) + canon (scene ledger) ── */
+function chronTitle(id){ const c=CHAPTERS.find(x=>x.id===id)||GARY_EVENTS.find(x=>x.id===id); return c?c.title:id; }
+function loadSaga(){ try{ return JSON.parse(localStorage.getItem('ksd_saga')); }catch(e){ return null; } }
+function loadCanon(){ try{ return JSON.parse(localStorage.getItem('ksd_canon'))||[]; }catch(e){ return []; } }
+function buildChronicle(){
+  const lines=[];
+  for(let i=1;i<=400;i++){
+    const k=keyOffset(i);
+    if(!localStorage.getItem('ksd_day_'+k)) continue;
+    const d=loadDay(k);
+    let l=k+': '+goalsMet(d)+'/3 goals';
+    if(d.careSkin&&d.careTeeth) l+=', care routine done';
+    if(d.forecast!=null && d.forecast-achievedLvl(d)>0) l+=', OVERCLAIMED forecast';
+    if((d.journal||'').trim()) l+=', journal: "'+d.journal.trim().slice(0,80)+'"';
+    lines.push(l);
+  }
+  return lines.reverse();   // oldest first
+}
+async function maybeCompactSaga(chron){
+  const KEEP=21;                                     // recent days stay raw
+  if(chron.length <= KEEP+24) return;                // compact only once >45 stored days
+  const saga=loadSaga();
+  if(saga && saga.days >= chron.length-KEEP) return; // summary already covers the old days
+  try{
+    const old=chron.slice(0, chron.length-KEEP);
+    const b=await aiCall('Existing story-so-far summary (may be empty): "'+(saga?saga.text:'')+'"\n\n'
+      +'Older daily records to fold into it: '+old.join('; ')
+      +'\n\nMerge everything into ONE running "story so far" of Koko\'s life on the station — max 180 words. Keep: habit arcs, dramatic signal collapses and recoveries, forecast honesty or lies, journal themes, emotional throughlines. Drop day-by-day detail. Return {"summary":"..."}');
+    if(b && b.summary) localStorage.setItem('ksd_saga', JSON.stringify({days:chron.length-KEEP, text:String(b.summary).slice(0,1600)}));
+  }catch(e){/* try again another day */}
+}
+function aiMemory(){
+  const saga=loadSaga(), canon=loadCanon(), chron=buildChronicle();
+  let m='';
+  if(saga && saga.text) m+='STORY SO FAR (long-term memory — stay consistent with it): '+saga.text+'\n';
+  const recent=chron.slice(-14);
+  if(recent.length) m+='RECENT DAYS: '+recent.join(' | ')+'\n';
+  if(meta.read.length) m+='CHAPTERS KOKO HAS LIVED, in order: '+meta.read.map(chronTitle).join(' -> ')+'\n';
+  if(canon.length) m+='PERSONALIZED SCENE NOTES (things that canonically happened): '+canon.map(c=>c.t+': '+c.note).join(' | ')+'\n';
+  return m;
+}
 function aiReady(){ return !!(meta.cfg.aiKey) && meta.booted && navigator.onLine; }
 async function aiCall(prompt){
   const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+AI_MODEL+':generateContent?key='+encodeURIComponent(meta.cfg.aiKey),{
@@ -1041,7 +1082,8 @@ function aiContext(s, sig){
   const y=loadDay(keyOffset(1));
   const j=(today.journal||y.journal||'').trim();
   const slot=pickDirective(s, new Date());
-  return 'TODAY ON THE STATION — signal integrity: '+sig+'% ('+TIER_INFO[signalTier(sig)].label+'). Streak: '+s.streak+' days. '
+  return aiMemory()
+    +'TODAY ON THE STATION — signal integrity: '+sig+'% ('+TIER_INFO[signalTier(sig)].label+'). Streak: '+s.streak+' days. '
     +'Yesterday: eating goal '+(goalKcal(y)?'met':'missed')+', exercise '+(goalMove(y)?'met':'missed')+', psych eval '+(goalMind(y)?'done':'skipped')+'. '
     +'Today so far: '+today.kcal+' kcal, '+today.move+' min exertion, psych eval '+(today.mood>0?'done':'not yet')+'. '
     +'Rook '+(s.rookDays>0?'has noticed things going missing from his hold and is suspicious':'has no idea Koko watches him from the vents and pilfers his cargo')+'. '
@@ -1062,6 +1104,7 @@ async function generateBundle(s, sig){
       localStorage.setItem('ksd_ai_'+todayKey(), JSON.stringify(b));
       document.getElementById('ai-status').textContent='◈ uplink live — today\'s narration is dynamic';
       render();
+      maybeCompactSaga(buildChronicle());   // fold old days into long-term memory when due
     }
   }catch(e){ document.getElementById('ai-status').textContent='uplink failed ('+e.message+') — using archived narration'; }
   aiBusy=false;
@@ -1073,12 +1116,17 @@ async function genScene(c){
     const s=stats();
     const b=await aiCall('Here is a canon scene from Koko\'s logbook as [speaker, text] pairs: '+JSON.stringify(c.scene)
       +'\n\nPlayer context: '+aiContext(s, computeSignal())
-      +'\n\nRewrite this scene keeping every story beat, character voice and outcome, but weave in 1-3 subtle references to the player context (their goals, signal, journal). Same length or slightly longer. Speakers must be from: '+VN_SPEAKERS.join(', ')
-      +'. Sparky never gets a speaker slot — narrate him via "narr". Return EXACTLY: {"scene":[["speaker","text"],...]}');
+      +'\n\nRewrite this scene keeping every story beat, character voice and outcome, but weave in 1-3 subtle references to the player context and past memory (their goals, signal, journal, earlier scenes). Same length or slightly longer. Speakers must be from: '+VN_SPEAKERS.join(', ')
+      +'. Sparky never gets a speaker slot — narrate him via "narr". Return EXACTLY: {"scene":[["speaker","text"],...], "summary":"one sentence recording what canonically happened, for future memory"}');
     const sc=b && b.scene;
     if(Array.isArray(sc) && sc.length>=4 && sc.every(l=>Array.isArray(l)&&l.length===2&&typeof l[1]==='string')){
       const clean=sc.map(l=>[VN_SPEAKERS.includes(l[0])?l[0]:'narr', l[1]]);
       localStorage.setItem('ksd_scene_'+c.id, JSON.stringify(clean));
+      if(b.summary){
+        const canon=loadCanon();
+        canon.push({id:c.id, t:c.title, note:String(b.summary).slice(0,220)});
+        localStorage.setItem('ksd_canon', JSON.stringify(canon.slice(-30)));
+      }
     }
   }catch(e){/* fallback: hand-written scene */}
 }
