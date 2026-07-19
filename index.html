@@ -528,6 +528,10 @@
         <button class="chip" style="text-align:center;" onclick="testAI()">⟲ TEST UPLINK</button>
         <div class="sys-sub" id="ai-status"></div>
       </div>
+      <div class="sys-row">
+        <div><div class="sys-label">Simulate night-cycle</div><div class="sys-sub">testing: push today into history and wake on a new day — audit, forecast, signal and narration all advance</div></div>
+        <button class="chip" onclick="timeSkip()">⏩ SLEEP</button>
+      </div>
       <button class="sys-btn" onclick="wipeData()">⚠ PURGE ALL TERMINAL DATA</button>
       <div style="font-size:9px;color:var(--text-dim);margin-top:14px;text-align:center;letter-spacing:1px;">
         KSD//SIGNAL v1.0 — unregistered terminal, deck 7<br>data stays on this device
@@ -1566,6 +1570,39 @@ function saveCfg(){
   meta.cfg.aiKey=document.getElementById('cfg-aikey').value.trim();
   saveMeta(meta); render(); showToast('⚙ Configuration saved');
 }
+/* testing helper: shift ALL dated records one day into the past, so "today"
+   starts fresh — a simulated night-cycle without waiting for midnight */
+function timeSkip(){
+  if(!confirm('Sleep through the night-cycle? Today\'s logs become yesterday\'s and a new day begins.'))return;
+  // day records: oldest first so each copy lands in an empty slot
+  const have=[];
+  for(let i=0;i<=400;i++){ if(localStorage.getItem('ksd_day_'+keyOffset(i))) have.push(i); }
+  for(let n=have.length-1;n>=0;n--){
+    const i=have[n];
+    localStorage.setItem('ksd_day_'+keyOffset(i+1), localStorage.getItem('ksd_day_'+keyOffset(i)));
+  }
+  localStorage.removeItem('ksd_day_'+todayKey());
+  // AI bundles shift too, so ambient continuity sees "yesterday"
+  for(let i=14;i>=0;i--){
+    const src=localStorage.getItem('ksd_ai_'+keyOffset(i));
+    if(src) localStorage.setItem('ksd_ai_'+keyOffset(i+1), src);
+    localStorage.removeItem('ksd_ai_'+keyOffset(i));
+  }
+  // signal-history chart keys
+  try{
+    const h=JSON.parse(localStorage.getItem('ksd_sig'))||{}; const nh={};
+    Object.entries(h).forEach(([k,v])=>{
+      const dt=new Date(k+'T12:00:00'); dt.setDate(dt.getDate()-1);
+      nh[dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')]=v;
+    });
+    localStorage.setItem('ksd_sig', JSON.stringify(nh));
+  }catch(e){}
+  // re-arm the once-per-day events: morning audit + forecast prompt
+  delete meta.lastReview; delete meta.fcPrompt;
+  saveMeta(meta);
+  location.reload();
+}
+
 function wipeData(){
   if(!confirm('Purge ALL terminal data? This wipes every log, chapter, and commendation.'))return;
   Object.keys(localStorage).filter(k=>k.startsWith('ksd_')).forEach(k=>localStorage.removeItem(k));
