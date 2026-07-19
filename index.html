@@ -637,9 +637,10 @@ function computeSignal(){
   let sig = base + trend*25;
   // today's progress gives a small live boost
   sig += goalsMet(today)*3;
-  // brand-new terminal starts uneasy but not horrific
+  // brand-new terminal starts at ZERO — a salvaged rig with no signal.
+  // Koko earns the signal: each goal met today lifts it visibly out of the dark.
   const anyHistory = [1,2,3].some(i=>goalsMet(loadDay(keyOffset(i)))>0);
-  if(!anyHistory && base===0) sig = 62;
+  if(!anyHistory && base===0) return Math.min(100, goalsMet(today)*8);
   // forecast audit: days where the claimed activity level exceeded what was actually
   // logged mean the ration limit was booked too high — the station notices.
   let pen=0;
