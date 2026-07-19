@@ -70,6 +70,15 @@
     background:rgba(62,230,193,0.10); opacity:0; top:30%;
     backdrop-filter: blur(1px);
   }
+  #static-noise {
+    position:fixed; inset:-60px; pointer-events:none; z-index:903; opacity:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+    background-size:240px 240px;
+  }
+  #invert-flash {
+    position:fixed; inset:0; z-index:955; pointer-events:none; opacity:0;
+    background:#cfe8e0; mix-blend-mode:difference;
+  }
 
   /* degradation tiers */
   body.g1 #crt-flicker { animation: flick1 7s infinite; }
@@ -82,6 +91,32 @@
   }
   body.g3 { animation: hueDrift 22s infinite; }
   @keyframes hueDrift { 0%,100%{filter:none;} 48%{filter:none;} 50%{filter:hue-rotate(18deg) saturate(1.2);} 52%{filter:none;} }
+  /* g4 = FLATLINE (signal < 10%) — the terminal is barely alive */
+  body.g3 #static-noise { opacity:0.10; animation: noiseShift 0.35s steps(4) infinite; }
+  body.g4 #static-noise { opacity:0.26; animation: noiseShift 0.16s steps(3) infinite; }
+  @keyframes noiseShift {
+    0%{transform:translate(0,0);} 25%{transform:translate(-18px,12px);}
+    50%{transform:translate(10px,-20px);} 75%{transform:translate(-8px,18px);} 100%{transform:translate(16px,-10px);}
+  }
+  body.g4 #crt-flicker { animation: flick4 0.9s infinite; }
+  @keyframes flick4 { 0%,60%,100%{opacity:0;} 65%{opacity:0.75;} 70%{opacity:0.1;} 78%{opacity:0.6;} 82%{opacity:0;} 90%{opacity:0.35;} }
+  body.g4 #app { animation: warp 6s ease-in-out infinite; }
+  @keyframes warp {
+    0%,100%{transform:skewX(0deg) scale(1);} 20%{transform:skewX(0.35deg) scale(1.002);}
+    45%{transform:skewX(-0.3deg) scale(0.998) translateX(1px);} 60%{transform:skewX(0.2deg);}
+    80%{transform:skewX(-0.4deg) scale(1.003) translateX(-2px);}
+  }
+  body.g4 .topbar-title, body.g4 .ring-value, body.g4 .signal-status, body.g4 .section-head,
+  body.g4 .sparky-name, body.g4 .chapter-title, body.g4 .crew-name, body.g4 .nav-btn {
+    text-shadow: 3px 0 rgba(255,60,90,0.65), -3px 0 rgba(60,180,255,0.65);
+  }
+  body.g4 .signal-bar { animation: barDie 1.4s steps(2) infinite; }
+  @keyframes barDie { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+  body.vroll #app { animation: vroll 0.35s steps(3) 1; }
+  @keyframes vroll {
+    0%{transform:translateY(0);} 30%{transform:translateY(-26px) skewX(1.5deg);}
+    60%{transform:translateY(14px);} 100%{transform:translateY(0);}
+  }
   body.burst #app { animation: jitter 0.28s steps(2) infinite; }
   @keyframes jitter {
     0%{transform:translate(0,0) skewX(0);} 25%{transform:translate(-3px,1px) skewX(0.6deg);}
@@ -302,6 +337,8 @@
 <div id="crt-vignette"></div>
 <div id="crt-flicker"></div>
 <div id="tear-bar"></div>
+<div id="static-noise"></div>
+<div id="invert-flash"></div>
 <div id="glitch-flash">
   <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <g stroke="#ff4a5e" stroke-width="1.6" fill="none" stroke-linecap="round">
@@ -696,14 +733,28 @@ function horrorFlash(){
   f.style.opacity='0.92';
   setTimeout(()=>f.style.opacity='0', 110+Math.random()*90);
 }
+function invertFlash(){
+  const f=document.getElementById('invert-flash');
+  f.style.opacity='1';
+  setTimeout(()=>f.style.opacity='0', 80+Math.random()*90);
+}
+function vRoll(){
+  document.body.classList.add('vroll');
+  setTimeout(()=>document.body.classList.remove('vroll'), 380);
+}
+let flatline=false;   // signal < 10% — the terminal is barely alive
 function glitchTick(){
   if(!meta.cfg.horror || curTier===0) return;
-  const p=[0, 0.10, 0.30, 0.55][curTier];
-  if(Math.random()<p) glitchBurst(curTier);
-  if(curTier>=2 && Math.random()<0.10) showToast(HORROR_MSGS[Math.floor(Math.random()*HORROR_MSGS.length)], true);
-  if(curTier===3 && Math.random()<0.07) horrorFlash();
+  const p=[0, 0.08, 0.25, 0.45][curTier];
+  if(Math.random()<(flatline?0.8:p)) glitchBurst(flatline?4:curTier);
+  if(curTier>=2 && Math.random()<(flatline?0.15:0.08)) showToast(HORROR_MSGS[Math.floor(Math.random()*HORROR_MSGS.length)], true);
+  if(curTier===3 && Math.random()<(flatline?0.12:0.06)) horrorFlash();
+  if(flatline){
+    if(Math.random()<0.40) vRoll();
+    if(Math.random()<0.22) invertFlash();
+  }
 }
-setInterval(glitchTick, 4000);
+setInterval(glitchTick, 3000);
 
 /* ═══════════════ STORY ═══════════════ */
 /* speakers: koko rook katie sparky gary other horror narr */
@@ -959,8 +1010,10 @@ function render(){
   if(signalTier(sig)===3) { meta.wasCritical=true; saveMeta(meta); }
   if(meta.wasCritical && signalTier(sig)<=1){ meta.recoveredOnce=true; meta.wasCritical=false; saveMeta(meta); s0.recovered=true; }
   curTier = tier;
-  document.body.classList.remove('g1','g2','g3');
+  flatline = meta.cfg.horror && sig < 10;
+  document.body.classList.remove('g1','g2','g3','g4');
   if(tier>0) document.body.classList.add('g'+tier);
+  if(flatline) document.body.classList.add('g4');
 
   // date + streak
   const d=new Date();
@@ -975,8 +1028,10 @@ function render(){
   bar.style.background=`linear-gradient(90deg, ${info.color}55, ${info.color})`;
   bar.style.boxShadow=`0 0 12px ${info.color}66`;
   const st=document.getElementById('signal-status');
-  st.textContent = sig+'% '+info.label; st.style.color=info.color;
-  document.getElementById('signal-note').textContent = info.note;
+  st.textContent = sig+'% '+(sig<10?'NO SIGNAL':info.label); st.style.color=info.color;
+  document.getElementById('signal-note').textContent = sig<10
+    ? '▓▓ CARRIER LOST ▓▓ the terminal is running on residual charge. feed it. FEED IT GOALS.'
+    : info.note;
 
   // shift forecast card
   const L = kcalLimit(today);
