@@ -447,7 +447,7 @@
       </div>
 
       <div class="directive-card">
-        <div class="directive-label">▸ STATION DIRECTIVE</div>
+        <div class="directive-label" id="directive-label">▸ STATION DIRECTIVE</div>
         <div class="directive-text glitchable" id="directive-text">—</div>
       </div>
     </div>
@@ -1011,13 +1011,47 @@ const SPARKY_LINES={
   2:['Low, uneasy triple-clicks. The feed is getting worse and he knows you know.','His wings half-open at nothing. He keeps swiveling toward the low channels.','An insistent chime against your wrist: log the goals. The station notices. He can hear it noticing.'],
   3:['A thin, wavering whine. He can\'t see the dark parts of the deck anymore.','His lamp stutters. Something is walking his antenna range and he cannot find it.','Three sharp tones, over and over, aimed at bay 4. Don\'t go near bay 4. Don\'t go n̸e̷a̴r̵—'],
 };
-const DIRECTIVES=[
-  'Hold all three goals today and the deck lights stay warm. Katie\'s orders.',
-  'Rook needs a hand on the Peregrine later — show up fed and stretched.',
-  'Gary docks Tuesday. Not that anyone is counting cycles. (Sparky is.)',
+/* Deck card content: Katie's official directives + overheard Rook encounters.
+   Rook pool depends on whether he's noticed the thefts yet (rookDays). */
+const KATIE_DIRECTIVES=[
+  'Hold all three goals today and the deck lights stay warm. Administrator\'s orders.',
   'Security asks residents to log psych evals daily. Unstable minds hear the walls.',
-  'Ration hall special: dumpling synth-broth. Katie says you WILL eat.',
+  'Ration hall special: dumpling synth-broth. Wagner says you WILL eat.',
+  'Hydration notice from the administrator\'s office: the recyclers can only give back what you give them. Drink.',
+  'Lower-deck soup kitchen needs hands on fifthday. Volunteers get double rations and Wagner\'s actual smile.',
+  'All residents: log your psych evals. Administrator Wagner reads the aggregates. She notices the gaps.',
+  'Docking fees waived this cycle for anyone donating blankets to deck 11. Yes, that\'s Wagner\'s doing. No, she won\'t admit it.',
+  'Reminder: curfew drills are drills. Unless the sirens are the low ones. Then they are not drills.',
+  'Wagner memo: maintenance keeps finding grease handprints in vents too small for the maintenance crew. Whoever you are — eat something.',
+  'A fruit shipment actually made it in. Real fruit. Limit posted by the administrator: two per resident. KOKO. TWO.',
 ];
+const ROOK_UNOBSERVED=[
+  'From the vent above bay twelve: Rook argued with his coffee machine for six minutes. The coffee machine won. Log nothing.',
+  'You watched him recalibrate the same thruster three times today. He hums while he works when he thinks nobody\'s listening. Badly.',
+  'One protein tin liberated from the Peregrine\'s hold. He has hundreds. He\'ll never notice. Sparky logged it as "salvage".',
+  'Rook talks to his ship while he works. Today he apologized to her. You are NOT going to tell anyone. Yet.',
+  'A coil of mag-wire went missing from bay twelve today. It is in your satchel. Coincidence is a big station.',
+  'He fell asleep in the pilot seat again, boots on the console. You dimmed the bay lights from the maintenance panel. He didn\'t wake.',
+  'His port thruster whines a quarter-tone flat. It\'s driving you insane. One night. One wrench. He\'d never even know.',
+];
+const ROOK_SUSPICIOUS=[
+  'Overheard at bay twelve: "THIRD tin this month. Either this station has rats, or the rats have a TOOLKIT."',
+  'Rook has started chalking tally marks on his cargo crates. You have started memorizing the marks.',
+  'He filed a theft report. Item: one coil of mag-wire. Suspect description: "small, fast, possibly imaginary." Katie framed it.',
+  'Rook installed a camera in his hold. It faces the door. You use the vents. It isn\'t a fair fight and you feel a little bad. A little.',
+  'Overheard: "...and if I catch whoever keeps reorganizing my toolbox — WHO SHARPENS SOMEONE ELSE\'S DRILL BITS?"',
+  'Someone fixed his flat port thruster in the night. He spent the morning glaring at it. It purrs now. He hates how much he doesn\'t hate it.',
+  'He left one protein tin on top of the cargo stack tonight. Just one. Set apart. Almost like bait. Almost like an offering. Take it.',
+];
+function pickDirective(s, d){
+  const rookPool = s.rookDays>0 ? ROOK_SUSPICIOUS : ROOK_UNOBSERVED;
+  const rookLabel = s.rookDays>0 ? '▸ BAY TWELVE // HE\'S COUNTING NOW' : '▸ BAY TWELVE // UNOBSERVED';
+  // alternate: even days Katie's board, odd days dockside snooping
+  if(d.getDate()%2===0){
+    return {label:'▸ STATION DIRECTIVE // WAGNER', text:KATIE_DIRECTIVES[(d.getDate()+d.getMonth())%KATIE_DIRECTIVES.length]};
+  }
+  return {label:rookLabel, text:rookPool[(d.getDate()+d.getMonth())%rookPool.length]};
+}
 function render(){
   today = loadDay(todayKey());
   const s0 = stats();
@@ -1096,7 +1130,9 @@ function render(){
   const lines=SPARKY_LINES[tier];
   document.getElementById('sparky-line').textContent = lines[(d.getDate()+d.getHours())%lines.length];
   document.getElementById('sparky-mood').textContent = ['// nominal','// uneasy','// scared','// s̷i̶g̸n̵a̷l̶ ̸l̵o̷s�kzzt'][tier];
-  document.getElementById('directive-text').textContent = DIRECTIVES[d.getDate()%DIRECTIVES.length];
+  const dir = pickDirective(s0, d);
+  document.getElementById('directive-label').textContent = dir.label;
+  document.getElementById('directive-text').textContent = dir.text;
 
   renderChapters(s0); renderCrew(s0); renderRecords(s0, sig);
   checkAch(s0);
