@@ -649,7 +649,7 @@ function goalsMet(d){ return (goalKcal(d)?1:0)+(goalMove(d)?1:0)+(goalMind(d)?1:
 
 /* aggregate stats over history */
 function stats(){
-  let s={fullDays:0, kcalDays:0, moveDays:0, mindDays:0, jDays:0, rookDays:0, careDays:0, streak:0, streakBroken:false};
+  let s={fullDays:0, kcalDays:0, moveDays:0, mindDays:0, jDays:0, rookDays:0, careDays:0, honestDays:0, streak:0, streakBroken:false};
   for(let i=0;i<120;i++){
     const d=loadDay(keyOffset(i));
     const g=goalsMet(d);
@@ -657,6 +657,7 @@ function stats(){
     if((d.journal||'').trim())s.jDays++;
     if(goalKcal(d)&&goalMove(d))s.rookDays++;   // discipline days — exercise AND diet; how Rook gets met
     if(d.careSkin&&d.careTeeth)s.careDays++;    // care-routine days — how Katie gets met
+    if(d.forecast!=null && achievedLvl(d)>=d.forecast)s.honestDays++;  // audits passed
     if(g===3)s.fullDays++;
     if(!s.streakBroken){
       if(g>=2)s.streak++;
@@ -806,6 +807,36 @@ const CHAPTERS=[
     ['koko','...Ten credits says I break it by morning. Don\'t log that.'],
     ['narr','Two quick clicks. Logged.'],
   ]},
+{ id:'i1', title:'A Full Stomach', cond:'Meet the eating goal once', test:s=>s.kcalDays>=1,
+  scene:[
+    ['narr','Chen\'s noodle stand, deck 5. The broth heater has been dying for a week; Koko fixes it in forty minutes with a bent probe and spite. Payment: one real bowl.'],
+    ['koko','Okay. Okay. That\'s— that\'s the first hot meal in six days. Don\'t look at me.'],
+    ['narr','Sparky watches the steam curl and mimics it with a slow, rising whistle. Chen pretends not to see her pocket two ration bars. Everyone on this deck pretends something.'],
+    ['other','[Chen] Heater breaks again next week, engineer. Same deal.'],
+    ['narr','It will not break next week. She will loosen a coupling anyway, just to have somewhere to be.'],
+  ]},
+{ id:'i2', title:'The Long Way Around', cond:'Meet the exercise goal once', test:s=>s.moveDays>=1,
+  scene:[
+    ['narr','The full ring of deck 7 is four kilometres of causeway, freight track and bad lighting. Koko walks all of it, because knowing a station means walking it.'],
+    ['narr','Sparky rides her shoulder, lamp sweeping, building a map with soft sonar pips: dead camera here, loose grate there, a vent big enough to live in. Two of those.'],
+    ['koko','Legs hurt. Good sign. Means they\'re still mine.'],
+    ['narr','On the last stretch she passes bay twelve — an old freighter called the PEREGRINE, one thruster cowling open like a wound. Somewhere inside, a man is swearing at a regulator. She files that away.'],
+  ]},
+{ id:'i3', title:'Mirror Check', cond:'Complete the care routine once', test:s=>s.careDays>=1,
+  scene:[
+    ['narr','A salvaged hygiene kit: half a tube of paste, a brush someone threw away too soon, soap that smells like an idea of lemons. The washroom mirror on sub-deck 7 is cracked down the middle.'],
+    ['koko','Right. Teeth. Face. Grease off. Grease will be back by lunch, but that\'s not the point.'],
+    ['narr','Sparky holds her hair clip in one raised leg, solemn as an altar boy.'],
+    ['koko','Still me under there. Good to know.'],
+    ['narr','Two faces in the cracked glass, both hers, neither flinching. On this station, that counts as a spa day.'],
+  ]},
+{ id:'i4', title:'Static Hour', cond:'Complete a psych eval once', test:s=>s.mindDays>=1,
+  scene:[
+    ['narr','Night cycle. The vent nest. Sparky opens a file and aims one steady lens at her: eval time. His idea. He read about it in a maintenance manual for PEOPLE, which is what he calls the station\'s medical database.'],
+    ['koko','Fine. Log: day whatever. The station\'s loud. The dark parts are darker than dark parts should be. And I miss the freighter. It was a junker, but it was OUR junker.'],
+    ['narr','Sparky records all of it. At the word "our" he presses one leg against her boot and leaves it there.'],
+    ['narr','Down the trunk line, just once, the deck lights dip — as if something leaned close to listen. Sparky logs that too. In a different file. The one he doesn\'t show her.'],
+  ]},
 { id:'ch2', title:'The Grump of Bay Twelve', cond:'Meet exercise & diet goals in the same day', test:s=>s.rookDays>=1,
   scene:[
     ['narr','Bay twelve. An old freighter called the PEREGRINE sits half-dark, one thruster cowling open like a wound. Koko is elbow-deep in it before she remembers the rule.'],
@@ -819,6 +850,21 @@ const CHAPTERS=[
     ['rook','...huh. Runs smoother.'],
     ['narr','He does not report her. Neither of them mentions it.'],
   ]},
+{ id:'i5', title:'Paperwork for Liars', cond:'Pass a forecast audit', test:s=>s.honestDays>=1,
+  scene:[
+    ['narr','The station audits everything. Ration draws against declared activity, logged exertion against filed forecasts. Little drones with clipboard souls, cross-checking a hundred thousand lives.'],
+    ['koko','Filed a forecast. Did the work. Numbers match. That\'s it? That\'s the whole audit?'],
+    ['narr','Sparky replays her forecast, then her exertion log, then plays a small ascending fanfare: HONEST. He\'s invented a stamp noise for it.'],
+    ['koko','Don\'t make it a thing. Everybody\'s numbers should match.'],
+    ['narr','On this station, almost nobody\'s numbers match. Somewhere in the administrator\'s tower, a flag that was hovering over an unregistered terminal on deck 7 quietly does not get raised.'],
+  ]},
+{ id:'i6', title:'Two in a Row', cond:'Hold a 2-day streak', test:s=>s.best>=2,
+  scene:[
+    ['narr','Two good days in a row. On a station, that\'s how a life starts: not with a plan, with a repeat.'],
+    ['narr','The vent nest has improvements now. A curtain made from cargo mesh. A shelf that is a coolant pipe wearing a plank. A light Sparky dims at night cycle without being asked.'],
+    ['koko','Same bench at the ration hall twice. Chen nodded at me like a regular. I\'m a REGULAR.'],
+    ['narr','Beneath the deck plates, the station hums its enormous hum. Tonight she can almost believe there\'s nothing underneath it, listening for repeats of its own.'],
+  ]},
 { id:'ch3', title:'Administrator Wagner', cond:'Complete the care routine (skin + teeth) 2 days', test:s=>s.careDays>=2,
   scene:[
     ['narr','Every stowaway gets found eventually. Koko is found by a tall woman with long red hair, wings shimmering faintly under a very official administrator\'s coat.'],
@@ -830,6 +876,23 @@ const CHAPTERS=[
     ['koko','Strange like what?'],
     ['narr','Katie Wagner smiles the way people smile when they\'ve read reports they can\'t unread.'],
     ['katie','Eat your meals, Koko.'],
+  ]},
+{ id:'i7', title:'The Dumpling Economy', cond:'Meet the eating goal 5 times', test:s=>s.kcalDays>=5,
+  scene:[
+    ['narr','Five proper meals logged, and the ration hall has started to make sense. It isn\'t a cafeteria. It\'s a stock exchange where the currency is dumplings and the insider trading is gossip.'],
+    ['other','[an old dockhand] You\'re the kid who fixed Chen\'s heater. Sit. Eat. You know about container 88?'],
+    ['koko','...The empty one?'],
+    ['other','[the dockhand] Empty NOW. Came in off a mining barge, whole crew compartment dead-cold, and the manifest said LIVESTOCK. You eat your meals, kid. Skinny people fit through the same gaps it does.'],
+    ['narr','Around the table, nobody laughs. Sparky, under her chair, very quietly powers his lamp to full charge.'],
+  ]},
+{ id:'i8', title:'Three Evals Deep', cond:'Complete 3 psych evals', test:s=>s.mindDays>=3,
+  scene:[
+    ['narr','Sparky keeps the evals in an archive he grooms like a garden. Tonight he plays her the first one back. Day-whatever Koko sounds smaller. Tighter. A voice folded to fit inside a crate.'],
+    ['koko','I don\'t sound like that anymore. Do I?'],
+    ['narr','Two bright chimes: no. Then he does something he\'s never done — scrubs backward, isolates four seconds of the old recording, and raises the gain.'],
+    ['narr','Under her old voice, in the crate-dark, there is a second sound. Rhythmic. Patient. Like breathing that has read about breathing.'],
+    ['koko','...That was the freight scan. Compressors. Sparky. That was compressors.'],
+    ['narr','He files it in the other archive. The one with one entry. Now two.'],
   ]},
 { id:'ch4', title:'Something in the Hold', cond:'Hold a 3-day streak', test:s=>s.best>=3,
   scene:[
@@ -845,6 +908,22 @@ const CHAPTERS=[
     ['narr','Koko does not scream. She walks, very fast, in a straight line, and files her first strange-cargo report at 0313 station time.'],
     ['katie','[incident log] Bay 4 sealed pending sweep. K.K.\'s report credible. This is the third one this quarter.'],
   ]},
+{ id:'i9', title:'Four Nights Quiet', cond:'Hold a 4-day streak', test:s=>s.best>=4,
+  scene:[
+    ['narr','Since bay 4 was sealed, the station has been quiet. Four nights of it. Quiet should feel like winning.'],
+    ['narr','It doesn\'t. The dockhands have stopped whistling on the freight lifts. Chen\'s queue talks in low voices. Even the causeway drunks go home early, and nobody says why.'],
+    ['koko','It\'s like the whole deck is holding its breath. Waiting for the other boot.'],
+    ['narr','Sparky spends the nights on the shelf, lamp off, lenses on the vent mouth. Standing a watch nobody assigned him.'],
+    ['narr','On the fourth night, far down the trunk line, something knocks. Three times. Nobody answers. The quiet resumes, heavier.'],
+  ]},
+{ id:'i10', title:'War Paint', cond:'Complete the care routine 4 days', test:s=>s.careDays>=4,
+  scene:[
+    ['narr','Someone has left a bar of real soap at the mouth of her vent. Wrapped in wax paper. Lavender, says the stamp — a plant she has seen exactly once, in a picture.'],
+    ['koko','No note. Officially, nobody knows I live here. Officially, this vent is EMPTY.'],
+    ['narr','Sparky produces the descending womp-womp he normally reserves for administrator-related phenomena. His theory is filed.'],
+    ['koko','Fine. Teeth, face, fancy soap. If the station\'s going to get weird, I\'m at least going into it clean.'],
+    ['narr','Routine as armor. She checks the cracked mirror: still her. Cleaner. Slightly lavender. Ready.'],
+  ]},
 { id:'ch5', title:'The Bounty Hunter', cond:'Meet the exercise goal 5 times', test:s=>s.moveDays>=5,
   scene:[
     ['narr','The gym on deck 6 is where dock workers burn off double shifts. Koko goes because Katie made it a permit condition. She stays because of Tuesdays.'],
@@ -856,6 +935,14 @@ const CHAPTERS=[
     ['narr','From her tool bag, Sparky emits a rapid ascending trill — the telemetry-alert tone.'],
     ['koko','SPARKY. Not. Now.'],
     ['narr','A smug two-note chime. The exercise goal, apparently, has been met.'],
+  ]},
+{ id:'i11', title:'Dock Legs', cond:'Meet the exercise goal 8 times', test:s=>s.moveDays>=8,
+  scene:[
+    ['narr','Eight days of real exertion and the station notices before she does. She takes the coil spools up the causeway ramp without stopping. Both of them. The dockhands notice too.'],
+    ['other','[a loader] Oi, engineer. We\'re short a pair of hands on the freight lift Tuesdays. Paid in scrip. You\'ve got dock legs now.'],
+    ['koko','Dock legs. Six weeks ago I got winded climbing OUT of a shipping crate.'],
+    ['narr','Passing bay twelve with the second spool, she catches Rook watching from the Peregrine\'s ramp. He says nothing. He nods. Once. Roughly the length of a medal ceremony, by his standards.'],
+    ['narr','Sparky plays the tiny private fanfare all the way home.'],
   ]},
 { id:'ch6', title:'Coolant and Coffee', cond:'7 perfect days total', test:s=>s.fullDays>=7,
   scene:[
@@ -869,6 +956,14 @@ const CHAPTERS=[
     ['narr','Rook looks at her for a long moment — the look of a man rearranging an opinion.'],
     ['rook','...There\'s coffee in the galley. Real beans, not station sludge. Don\'t tell Wagner I have them, she\'ll tax me.'],
     ['narr','It is the nicest thing anyone has said to her in two years.'],
+  ]},
+{ id:'i12', title:'A Life, Almost', cond:'10 perfect days total', test:s=>s.fullDays>=10,
+  scene:[
+    ['narr','Ten perfect days, scattered across the calendar like good coins. Add them up and they look almost like a life.'],
+    ['narr','A bench at Chen\'s that is understood to be hers. A standing repair queue. A drone asleep on a shelf with one leg hooked over the lamp cord. A captain who leaves his bay door open now, which in Rook means WELCOME.'],
+    ['koko','[journal] Note to past me, crate-shaped and terrified: we made it weird and small and greasy, but we MADE it.'],
+    ['narr','Sparky adds the entry to the archive with his gentlest chime.'],
+    ['narr','Almost like a life. The station lets her have the almost. The station knows what it keeps below decks, and how much it costs to keep it there, and the price has been going up.'],
   ]},
 { id:'ch7', title:'Quarantine', cond:'Hold a 5-day streak', test:s=>s.best>=5,
   scene:[
