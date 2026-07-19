@@ -1096,6 +1096,55 @@ const GARY_EVENTS=[
   ]},
 ];
 
+/* ═══════════════ STATION DAYS — reactive daily log ═══════════════
+   Every completed day gets an auto-written entry reflecting what Koko
+   actually did (or didn't). Fragments below; AI narrator can override. */
+const DL_OPEN={
+  0:['The cycle closes with the deck lights warm and steady. A good day, by the station\'s ledger.','Signal held all cycle. Sparky spent the evening idle-humming, which is his version of whistling.'],
+  1:['The cycle closes with a faint static edge on the feed. Livable. Watchful.','A day with a hairline crack in it somewhere. Nothing you could point to. Sparky pointed at it twice anyway.'],
+  2:['The cycle closes badly — the feed chewed and stuttering, the dark parts of the deck darker than the ledger says they should be.','A degraded day. The lights on the trunk line dipped four times. The maintenance log says zero times.'],
+  3:['The cycle barely closes at all. The terminal spent the day running on residual charge and stubbornness.','A flatline day. Sparky stood watch on the shelf with his lamp off, saving power for whatever comes.'],
+};
+const DL_EAT_MET=['Rations were real today — logged, honest, warm. Chen\'s counter is starting to hold her seat without being asked.','She ate like someone planning to be alive next week. Sparky stamped the log with his little HONEST fanfare.'];
+const DL_EAT_NONE=['No rations logged. By evening Sparky had nudged the same unopened bar across the shelf three times, one click each. She pretended not to see. He pretended not to count.','Nothing eaten, or nothing admitted. The stomach and the ledger disagree, and Sparky believes the stomach.'],
+DL_EAT_OVER=['The rations ran heavy today — well past the filed limit. The station doesn\'t judge. The audit drones, however, take notes.','Too much, too fast, the way people eat when something underneath the day is gnawing. Sparky logged it without a chime.'],
+DL_EAT_UNDER=['Some food, not enough — engine running on fumes and pride. Sparky flagged the shortfall in amber.','She undershot the rations and called it discipline. Sparky filed it under a different word.'];
+const DL_MOVE_MET=['The body got its work today — causeways, crates, the good ache. Dock legs, getting stronger.','Exertion logged and honest. Somewhere on the ring, her shortcut times are quietly improving.'],
+DL_MOVE_NONE=['No exertion logged. The vents felt smaller today, or she fit them worse. Sparky ran his map of the deck twice, alone.','A still day. The kind the station notices — soft things get noticed here first.'];
+const DL_MIND_HIGH=['The psych eval came back bright. Sparky replayed a half-second of her laugh, twice, at low volume, for himself.','Eval logged: steady. The dark parts of the deck kept their distance tonight.'],
+DL_MIND_MID=['The psych eval came back level. Not good, not bad — holding. On this station, holding is a skill.','Eval logged: flat calm. Sparky accepted it the way harbors accept grey weather.'],
+DL_MIND_LOW=['The psych eval came back heavy. Sparky sat closer than usual all evening and asked for nothing.','A low eval. He dimmed the nest light early and played the quiet three-note tune she never told him she liked.'],
+DL_MIND_NONE=['No psych eval. The silence went into the file where Sparky keeps the things he cannot fix. That file is getting thick.','Eval skipped. Down the trunk line, once, something knocked — as if the unsaid things had been heard anyway.'];
+const DL_CARE_MET=['Teeth, face, the fancy soap. Armor on. The cracked mirror reported: still her, still ready.','The care routine held. Small dignities, stacked daily, are how stowaways become residents.'];
+const DL_AUDIT_FAIL=['The forecast didn\'t survive its audit — the claimed shift and the logged work don\'t match. The station remembers. It always remembers.','An overclaimed forecast, flagged in red. Somewhere in the tower, a drone with a clipboard soul underlined her terminal ID.'];
+const DL_CLOSE={
+  0:['End of cycle. The nest curtain drawn, the drone on his shelf, the station humming its enormous hum with nothing underneath it. Tonight.','Cycle filed. Sleep comes easy on days the numbers are honest.'],
+  1:['End of cycle. Sparky kept one lens on the vent mouth until her breathing evened out.','Cycle filed, with a footnote of static.'],
+  2:['End of cycle. The whispers were louder tonight. She slept with the wrench inside the blanket.','Cycle filed. Somewhere below decks, something else finished its accounting too.'],
+  3:['End of cycle, barely. The terminal\'s last log line before sleep mode is not text. It is a sound. It is not repeated here.','Cycle filed on residual charge. Feed the terminal tomorrow. Feed it goals.'],
+};
+function buildDayLog(k){
+  const d=loadDay(k), L=kcalLimit(d);
+  let sig=null; try{ sig=(JSON.parse(localStorage.getItem('ksd_sig'))||{})[k]; }catch(e){}
+  const tier=sig!=null?signalTier(sig):1;
+  const pick=a=>a[(k.charCodeAt(k.length-1)+k.charCodeAt(k.length-2))%a.length];
+  const sc=[['narr',pick(DL_OPEN[tier])]];
+  if(d.kcal<=0) sc.push(['narr',pick(DL_EAT_NONE)]);
+  else if(d.kcal>L*1.1) sc.push(['narr',pick(DL_EAT_OVER)]);
+  else if(!goalKcal(d)) sc.push(['narr',pick(DL_EAT_UNDER)]);
+  else sc.push(['narr',pick(DL_EAT_MET)]);
+  sc.push(['narr',pick(goalMove(d)?DL_MOVE_MET:DL_MOVE_NONE)]);
+  if(d.mood>=4) sc.push(['narr',pick(DL_MIND_HIGH)]);
+  else if(d.mood===3) sc.push(['narr',pick(DL_MIND_MID)]);
+  else if(d.mood>0) sc.push(['narr',pick(DL_MIND_LOW)]);
+  else sc.push(['narr',pick(DL_MIND_NONE)]);
+  if(d.careSkin&&d.careTeeth) sc.push(['narr',pick(DL_CARE_MET)]);
+  if(d.forecast!=null && d.forecast-achievedLvl(d)>0) sc.push(['narr',pick(DL_AUDIT_FAIL)]);
+  if((d.journal||'').trim()) sc.push(['koko','[journal] '+d.journal.trim()]);
+  sc.push(['narr',pick(DL_CLOSE[tier])]);
+  return sc;
+}
+
 /* ═══════════════ ACHIEVEMENTS ═══════════════ */
 const ACH=[
   {id:'first',   icon:'📡', name:'First Transmission', cond:'log anything once', test:s=>s.any},
@@ -1213,15 +1262,23 @@ async function generateBundle(s, sig){
     const b=await aiCall(aiContext(s,sig)+'\n\nWrite today\'s ambient content. Return EXACTLY this JSON shape: '
       +'{"sparky":{"stable":[3 strings],"uneasy":[3 strings],"degraded":[3 strings],"critical":[3 strings]},'
       +'"directive":{"label":"short ▸-prefixed card header matching the requested voice","text":"the card body, 1-2 sentences"},'
-      +'"whispers":[5 lowercase horror lines, each either a SPARKY⟩ transmission or impersonal station-system text]}. '
+      +'"whispers":[5 lowercase horror lines, each either a SPARKY⟩ transmission or impersonal station-system text],'
+      +'"daylog":[4-7 ["speaker","text"] pairs — a closing account of YESTERDAY reacting to exactly what the player did and did not do (eating, exercise, psych eval, care, audit honesty); speakers from: narr, koko; quote the journal if one exists]}. '
       +'Sparky arrays are third-person narrations of his beeps/behavior reacting to that signal tier and to the player\'s actual goals above. '
       +'If YOUR OWN RECENT NARRATION opened a thread — something Rook noticed, a directive Katie issued, a sound in the walls — continue it or pay it off today where it fits naturally. Threads may span days.');
     if(b && b.sparky && TIER_KEYS.every(k=>Array.isArray(b.sparky[k])&&b.sparky[k].length)){
       localStorage.setItem('ksd_ai_'+todayKey(), JSON.stringify(b));
       document.getElementById('ai-status').textContent='◈ uplink live — today\'s narration is dynamic';
+      // AI-written recap of yesterday replaces the fragment-built one
+      if(Array.isArray(b.daylog) && b.daylog.length>=3 && b.daylog.every(l=>Array.isArray(l)&&l.length===2&&typeof l[1]==='string')){
+        const yk2=keyOffset(1);
+        if(localStorage.getItem('ksd_day_'+yk2))
+          localStorage.setItem('ksd_daylog_'+yk2, JSON.stringify(b.daylog.map(l=>[['narr','koko'].includes(l[0])?l[0]:'narr', l[1]])));
+      }
       render();
       maybeCompactSaga(buildChronicle());   // fold old days into long-term memory when due
       for(let i=14;i<=60;i++) localStorage.removeItem('ksd_ai_'+keyOffset(i));   // tidy old bundles
+      for(let i=30;i<=90;i++) localStorage.removeItem('ksd_daylog_'+keyOffset(i));
     }
   }catch(e){ document.getElementById('ai-status').textContent='uplink failed ('+e.message+') — using archived narration'; }
   aiBusy=false;
@@ -1392,6 +1449,11 @@ function render(){
       else setTimeout(()=>showToast('◈ FORECAST AUDIT PASSED — yesterday\'s ration limit was honest. Signal holds.'), 900);
     }
   }
+  // station days: write yesterday's reactive log entry once its data is final
+  const ylk=keyOffset(1);
+  if(localStorage.getItem('ksd_day_'+ylk) && !localStorage.getItem('ksd_daylog_'+ylk)){
+    localStorage.setItem('ksd_daylog_'+ylk, JSON.stringify(buildDayLog(ylk)));
+  }
   // prompt for today's forecast once per day
   if(meta.booted && today.forecast==null && meta.fcPrompt!==todayKey()){
     meta.fcPrompt=todayKey(); saveMeta(meta);
@@ -1464,10 +1526,34 @@ function renderChapters(s){
       <div class="chapter-cond">${open?'':'⬡ '}journal ${c.need} day${c.need>1?'s':''} total</div></div>`;
   });
   list.insertAdjacentHTML('beforeend', runins);
+  // station days — the terminal's reactive account of each past cycle
+  let dl='', found=0;
+  for(let i=1;i<=14;i++){
+    const k=keyOffset(i);
+    if(!localStorage.getItem('ksd_daylog_'+k)) continue;
+    const d=loadDay(k); const g=goalsMet(d);
+    found++;
+    dl+=`<div class="chapter-card" style="border-left-color:${g===3?'var(--teal)':g>=1?'var(--amber-dim)':'var(--danger)'}" onclick="openVN('day_${k}')">
+      <div class="chapter-num">CYCLE ${k.replaceAll('-','.')}</div>
+      <div class="chapter-title glitchable" style="font-size:12px;">${g}/3 goals — ${['a dark day','a thin day','a decent day','a full day'][g]}</div></div>`;
+  }
+  if(found) list.insertAdjacentHTML('beforeend',
+    '<div class="section-head" style="margin-top:22px;">Station Days // the terminal\'s account</div>'+dl);
   document.getElementById('story-count').textContent = unlocked+'/'+CHAPTERS.length;
 }
 let vnScene=null, vnIdx=0;
 function openVN(id){
+  if(id.startsWith('day_')){
+    const k=id.slice(4);
+    let sc=null; try{ sc=JSON.parse(localStorage.getItem('ksd_daylog_'+k)); }catch(e){}
+    if(!Array.isArray(sc)) return;
+    vnScene={id, title:'Cycle '+k, scene:sc}; vnIdx=0;
+    document.getElementById('vn-title').textContent='STATION DAY — CYCLE '+k.replaceAll('-','.');
+    document.getElementById('vn-body').innerHTML='';
+    document.getElementById('vn-overlay').classList.add('open');
+    vnNext();
+    return;
+  }
   const c=CHAPTERS.find(x=>x.id===id) || GARY_EVENTS.find(x=>x.id===id); if(!c)return;
   let scene=c.scene;
   try{ const g=JSON.parse(localStorage.getItem('ksd_scene_'+id)); if(Array.isArray(g)&&g.length>=4) scene=g; }catch(e){}
