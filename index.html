@@ -1300,6 +1300,7 @@ function buildChronicle(){
     let l=k+': '+goalsMet(d)+'/3 goals';
     if(d.careSkin&&d.careTeeth) l+=', care routine done';
     if(d.forecast!=null && d.forecast-achievedLvl(d)>0) l+=', OVERCLAIMED forecast';
+    if(Array.isArray(d.moments)&&d.moments.length) l+=', moments: '+d.moments.join('/');
     if((d.journal||'').trim()) l+=', journal: "'+d.journal.trim().slice(0,80)+'"';
     lines.push(l);
   }
@@ -1368,6 +1369,7 @@ function aiContext(s, sig){
     +'TODAY ON THE STATION — signal integrity: '+sig+'% ('+TIER_INFO[signalTier(sig)].label+'). Streak: '+s.streak+' days. '
     +'Yesterday: eating goal '+(goalKcal(y)?'met':'missed')+', exercise '+(goalMove(y)?'met':'missed')+', psych eval '+(goalMind(y)?'done':'skipped')+'. '
     +'Today so far: '+today.kcal+' kcal, '+today.move+' min exertion, psych eval '+(today.mood>0?'done':'not yet')+'. '
+    +(Array.isArray(today.moments)&&today.moments.length?('Moments Koko already lived today (small scenes that happened — reference them where natural): '+today.moments.join(', ')+'. '):'')
     +'Rook '+(s.rookDays>0?'has noticed things going missing from his hold and is suspicious':'has no idea Koko watches him from the vents and pilfers his cargo')+'. '
     +'Gary\'s cutter is '+(s.garyDocked?'docked at bay nine':'away on a skip-trace')+'. Journal days: '+s.jDays+'. '
     +(j?('Koko\'s latest journal line (weave it in subtly where fitting): "'+j.slice(0,200)+'". '):'')
@@ -1843,6 +1845,11 @@ function confirmLog(){
     showToast('🧠 Psych eval transmitted. Sparky approves.');
   }
   const m = pickMoment(logType);   // may set once-per-day flags on today.mFlags
+  if(m){
+    // record the fired moment so the narrator's memory knows it happened
+    (today.moments=today.moments||[]).push(m[0].replace('MOMENT — ',''));
+    today.moments=today.moments.slice(-8);
+  }
   saveDay(todayKey(), today);
   closeLog(); render();
   if(m) setTimeout(()=>playMoment(m[0], m[1]), 350);
