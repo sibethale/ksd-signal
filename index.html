@@ -1145,6 +1145,124 @@ function buildDayLog(k){
   return sc;
 }
 
+/* ═══════════════ MOMENTS — instant reactions to what you just logged ═══════════════
+   Ephemeral micro-scenes: play once at the moment of logging, never listed in the
+   Logbook. Branch on type, amount, and journal content. Max one per branch per day. */
+const M_MEAL_FIRST=[
+  ['narr','First rations of the cycle, logged and honest. Somewhere in the nest, a kettle that is really a coolant line pops twice, approvingly.'],
+  ['koko','Fuel in. Okay, station. Let\'s see what you\'ve got today.'],
+  ['narr','Sparky stamps the log with his little HONEST fanfare and pre-warms her socket wrench. It doesn\'t need pre-warming. It\'s a ritual.'],
+];
+const M_MEAL_BIG=[
+  ['narr','A real meal — the kind dock crews eat before heavy shifts. Chen doesn\'t comment. Chen adds an extra dumpling, which is how Chen comments.'],
+  ['koko','I am going to lift SO many crates today.'],
+  ['narr','Sparky, tracking her chopsticks like a spectator sport, plays the tiny fanfare at half volume so the whole hall doesn\'t hear.'],
+];
+const M_MEAL_SNACK=[
+  ['narr','A pocket ration, eaten walking, like a goblin of the causeways. It counts. Barely, but it counts.'],
+  ['koko','Snacks are just meals with commitment issues. Log it.'],
+  ['narr','One skeptical click from the satchel. Logged, and judged.'],
+];
+const M_MEAL_OVER=[
+  ['narr','That was... past the limit. Comfortably past. Uncomfortably, actually, from where Koko is now sitting, which is the floor of the nest, not moving.'],
+  ['koko','Why. Why did I do that. Sparky, if the station gets attacked in the next hour, I die here. Tell Rook he can have my wrenches.'],
+  ['narr','Sparky rolls a water pouch against her boot and plays, very softly, the descending womp-womp. The vents will be a squeeze tomorrow. The audit drones have taken note.'],
+  ['koko','...worth it though. Slightly. Ask me again in an hour.'],
+];
+const M_MOVE_LIGHT=[
+  ['narr','A short stint of movement — a stretch of causeway, a few crates, blood remembering it has places to be.'],
+  ['koko','Not a workout. A down payment on a workout.'],
+  ['narr','Sparky logs it without ceremony but keeps the file open, optimistically.'],
+];
+const M_MOVE_GOOD=[
+  ['narr','Proper work — the good ache settling into her shoulders, the kind that means the body was USED today.'],
+  ['koko','Dock legs, don\'t fail me now.'],
+  ['narr','From the shelf, an approving double-chime. Somewhere on deck 6, a pull-up bar remains unbent, but it\'s early days.'],
+];
+const M_MOVE_HEAVY=[
+  ['narr','A heavy session — the kind that ends with forearms shaking and grease in places grease should not reach. Even the freight loaders nodded on her way past.'],
+  ['koko','Everything hurts. Everything WORKS. These are different sentences and I mean both.'],
+  ['narr','Sparky escorts her to the nest at low hover, dimming lights ahead of her like a tiny usher, and files the session under his rarest tag: MAGNIFICENT.'],
+];
+const M_MOVE_GOAL=[
+  ['narr','Exertion target met. On the telemetry, one ring closes with a soft mechanical certainty, like a lock deciding to trust you.'],
+  ['koko','Goal. Met. Station, you may applaud.'],
+  ['narr','The station does not applaud. Sparky covers for it with the full fanfare, wings half-spread, absolutely shameless.'],
+];
+const M_MIND_ANXIETY=[
+  ['narr','The journal line goes into the log, and Sparky reads it the way he reads hull-breach telemetry: instantly, twice, wings tightening.'],
+  ['narr','He initiates the protocol he built himself and never named: nest light down to ember, a slow four-count click... hold... four-count click — a breathing pace, wearing a metronome\'s clothes. One weighted leg rests on her knee.'],
+  ['koko','I\'m fine. I\'m— okay. Not fine. Working on it. Four counts, yeah.'],
+  ['narr','They sit inside the small circle of ember-light until her shoulders come down from around her ears. The station, for once, keeps its noises to itself. He stays until the file closes. He always stays.'],
+];
+const M_MIND_DARK=[
+  ['narr','A heavy eval, logged honestly — which is the bravest configuration of a bad day.'],
+  ['narr','Sparky doesn\'t chirp. He settles on her shoulder, powers down everything but one warm lens, and becomes, deliberately, the weight of a hand.'],
+  ['koko','...Thanks, bug. Tomorrow, right?'],
+  ['narr','One soft chime. Tomorrow.'],
+];
+const M_MIND_MID=[
+  ['narr','Eval logged: level. Not a good day, not a bad one — a held line. The station respects a held line; most of its bulkheads are exactly that.'],
+  ['koko','Steady as she goes. That\'s the whole entry, Sparky. Some days that\'s the whole entry.'],
+];
+const M_MIND_BRIGHT=[
+  ['narr','Eval logged: bright. Sparky triple-checks the reading, because optimism on this station is usually a sensor fault.'],
+  ['koko','Nope. Real. Good day. Log it before the universe notices.'],
+  ['narr','He logs it fast, seals the file, and does one small, unnecessary loop of the nest. Recorded forever. The universe can do nothing.'],
+];
+const M_CARE_FULL=[
+  ['narr','Teeth, face, the lavender soap. The full ritual, unrushed. In the cracked mirror: two Kokos, both clean, both ready.'],
+  ['koko','Armor on. Come at me, station.'],
+  ['narr','Sparky presents her hair clip like a squire presenting a sword. He has been waiting all morning to do this.'],
+];
+const M_CARE_HALF=[
+  ['narr','Half the ritual — better than none, less than the deal. The cracked mirror declines to comment.'],
+  ['koko','I\'ll do the rest tonight. Sparky. I WILL.'],
+  ['narr','One click. Provisionally logged. He keeps the soap in view, meaningfully.'],
+];
+let lastLogVal=0;
+function pickMoment(type){
+  const flags = today.mFlags || (today.mFlags={});
+  if(type==='meal'){
+    if(today.kcal > kcalLimit(today)*1.1 && !flags.mealOver){ flags.mealOver=1; return ['MOMENT — TOO MUCH', M_MEAL_OVER]; }
+    if(flags.meal) return null;
+    flags.meal=1;
+    if(lastLogVal>=700) return ['MOMENT — A REAL MEAL', M_MEAL_BIG];
+    if(lastLogVal<200)  return ['MOMENT — GRAZING', M_MEAL_SNACK];
+    return ['MOMENT — FIRST RATIONS', M_MEAL_FIRST];
+  }
+  if(type==='move'){
+    if(today.move>=meta.cfg.move && !flags.moveGoal){ flags.moveGoal=1; return ['MOMENT — TARGET MET', lastLogVal>=60?M_MOVE_HEAVY:M_MOVE_GOAL]; }
+    if(flags.move) return null;
+    flags.move=1;
+    if(lastLogVal>=60) return ['MOMENT — HEAVY SHIFT', M_MOVE_HEAVY];
+    if(lastLogVal<20)  return ['MOMENT — WARM-UP', M_MOVE_LIGHT];
+    return ['MOMENT — GOOD WORK', M_MOVE_GOOD];
+  }
+  if(type==='mind'){
+    const j=(today.journal||'').toLowerCase();
+    if(/anxi|worri|scared|afraid|panic|nervous|stress|overwhelm/.test(j) && !flags.anx){ flags.anx=1; return ['MOMENT — THE PROTOCOL', M_MIND_ANXIETY]; }
+    if(flags.mind) return null;
+    flags.mind=1;
+    if(today.mood<=2) return ['MOMENT — A HEAVY EVAL', M_MIND_DARK];
+    if(today.mood>=4) return ['MOMENT — A BRIGHT EVAL', M_MIND_BRIGHT];
+    return ['MOMENT — HOLDING', M_MIND_MID];
+  }
+  if(type==='care'){
+    if(flags.care) return null;
+    flags.care=1;
+    return today.careSkin&&today.careTeeth ? ['MOMENT — WAR PAINT', M_CARE_FULL] : ['MOMENT — HALF RITUAL', M_CARE_HALF];
+  }
+  return null;
+}
+function playMoment(title, scene){
+  vnScene={id:'moment', title, scene}; vnIdx=0;
+  document.getElementById('vn-title').textContent=title;
+  document.getElementById('vn-body').innerHTML='';
+  document.getElementById('vn-overlay').classList.add('open');
+  vnNext();
+}
+
 /* ═══════════════ ACHIEVEMENTS ═══════════════ */
 const ACH=[
   {id:'first',   icon:'📡', name:'First Transmission', cond:'log anything once', test:s=>s.any},
@@ -1709,11 +1827,11 @@ function confirmLog(){
   if(logType==='meal'){
     const v=+document.getElementById('log-kcal-input').value||0;
     if(v<=0){showToast('Enter kcal first');return;}
-    today.kcal+=v; showToast('🍜 +'+v+' kcal logged');
+    today.kcal+=v; lastLogVal=v; showToast('🍜 +'+v+' kcal logged');
   } else if(logType==='move'){
     const v=+document.getElementById('log-move-input').value||0;
     if(v<=0){showToast('Enter minutes first');return;}
-    today.move+=v; showToast('🔧 +'+v+' min exertion logged');
+    today.move+=v; lastLogVal=v; showToast('🔧 +'+v+' min exertion logged');
   } else if(logType==='care'){
     today.careSkin=document.getElementById('care-skin').classList.contains('sel');
     today.careTeeth=document.getElementById('care-teeth').classList.contains('sel');
@@ -1724,8 +1842,10 @@ function confirmLog(){
     today.mood=pickedMood; today.journal=document.getElementById('log-journal-input').value||'';
     showToast('🧠 Psych eval transmitted. Sparky approves.');
   }
+  const m = pickMoment(logType);   // may set once-per-day flags on today.mFlags
   saveDay(todayKey(), today);
   closeLog(); render();
+  if(m) setTimeout(()=>playMoment(m[0], m[1]), 350);
 }
 function closeLog(e){ if(e && e.target!==e.currentTarget)return; document.getElementById('log-modal').classList.remove('open'); }
 
