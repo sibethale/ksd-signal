@@ -1,0 +1,20 @@
+{
+  "name": "ksd-signal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KSD // Signal — Keppler Space Dock health tracker. Capacitor native shell adds Google Health Connect support.",
+  "scripts": {
+    "sync:web": "node scripts/build-web.mjs",
+    "cap:sync": "node scripts/build-web.mjs && cap sync",
+    "cap:android": "node scripts/build-web.mjs && cap sync android && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/local-notifications": "^7.0.7",
+    "@kiwi-health/capacitor-health-connect": "^0.0.42"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}

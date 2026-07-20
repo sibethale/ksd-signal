@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>KSD // SIGNAL</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Oxanium:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Oxanium:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #060a0e;
@@ -29,7 +29,135 @@
     --border: #1c2a30;
     --glow-teal: rgba(62,230,193,0.35);
     --glow-amber: rgba(255,179,71,0.30);
+    --radius: 4px;
   }
+  /* ══════ 8-BIT THEME (Koko) — cute retro-game: bright palette, blocky pixel edges ══════ */
+  body.bubbly {
+    --bg: #1a1433;
+    --surface: #2b2450;
+    --surface2: #3a3168;
+    --teal: #4ef2c8;
+    --teal-dim: #3aa892;
+    --amber: #ffd166;
+    --amber-dim: #b98a44;
+    --violet: #c9a4ff;
+    --danger: #ff6b8a;
+    --text: #fdf6ff;
+    --text-dim: #9d8fd6;
+    --border: #6b5bc4;
+    --glow-teal: rgba(78,242,200,0.0);
+    --glow-amber: rgba(255,209,102,0.0);
+    --radius: 0px;
+  }
+  /* cozy (8-bit) mode: drop the heavy horror CRT overlays for performance + vibe */
+  body.cozy #crt-scanlines, body.cozy #crt-vignette, body.cozy #crt-flicker,
+  body.cozy #tear-bar, body.cozy #static-noise { display:none !important; }
+  body.cozy::before { background:
+      radial-gradient(ellipse at 50% -10%, rgba(78,242,200,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(201,164,255,0.08) 0%, transparent 45%) !important; }
+  /* blocky: hard square corners + chunky borders + hard offset shadows (no blur) */
+  body.bubbly .ring-card, body.bubbly .sys-row, body.bubbly .quick-btn, body.bubbly .chip,
+  body.bubbly .sparky-card, body.bubbly .signal-card, body.bubbly .directive-card,
+  body.bubbly .chart-card, body.bubbly .ach-card, body.bubbly .hist-row, body.bubbly .modal,
+  body.bubbly .crew-card, body.bubbly .modal-input, body.bubbly .sys-input, body.bubbly .streak-badge,
+  body.bubbly .modal-btn, body.bubbly .nav-btn {
+    border-radius:0 !important; border-width:2px !important;
+    box-shadow:3px 3px 0 rgba(0,0,0,0.45) !important;
+  }
+  /* pixel font on headings/labels */
+  body.bubbly .topbar-title, body.bubbly .sparky-name, body.bubbly .section-head,
+  body.bubbly .ring-label, body.bubbly .streak-badge, body.bubbly .signal-label {
+    font-family:'Press Start 2P', monospace !important; text-shadow:none;
+    letter-spacing:0 !important; line-height:1.6 !important;
+  }
+  body.bubbly .topbar-title { font-size:12px !important; }
+  body.bubbly .section-head { font-size:8px !important; }
+  body.bubbly .ring-label { font-size:7px !important; }
+  /* chunky press feedback: button "pushes down" into its shadow */
+  body.bubbly .quick-btn, body.bubbly .chip, body.bubbly .modal-btn { transition:transform .05s steps(2), box-shadow .05s steps(2); }
+  body.bubbly .quick-btn:active, body.bubbly .chip:active, body.bubbly .modal-btn:active {
+    transform:translate(3px,3px); box-shadow:0 0 0 rgba(0,0,0,0.45) !important;
+  }
+  body.bubbly .sparky-orb { border-radius:0 !important; box-shadow:3px 3px 0 rgba(0,0,0,0.5); animation:hop 1.6s steps(2) infinite; }
+  @keyframes hop { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
+
+  /* ══════ MODERN NOIR — tonal elevation, one accent, rounded, clean type ══════ */
+  body.modern {
+    --bg:#0b0d12; --surface:#141821; --surface2:#1d232e;
+    --teal:#2ee6c3; --teal-dim:#1d8f7a;
+    --amber:#f5b657; --amber-dim:#93692c;
+    --violet:#b18cf2; --danger:#ff5a6e;
+    --text:#e8edf4; --text-dim:#93a0ae;
+    --border:rgba(255,255,255,0.07);
+    --glow-teal:rgba(46,230,195,0.22); --glow-amber:rgba(245,182,87,0.18);
+    --radius:16px;
+    font-family:'Oxanium', system-ui, sans-serif;
+  }
+  /* constant CRT chrome off; horror-driven overlays (flicker, tear, static, flash) stay live */
+  body.modern #crt-scanlines, body.modern #crt-vignette { display:none; }
+  body.modern::before { background:
+    radial-gradient(1100px 480px at 50% -12%, rgba(46,230,195,0.06), transparent 60%),
+    radial-gradient(900px 520px at 92% 112%, rgba(177,140,242,0.05), transparent 55%) !important; }
+  /* faint grain instead of scanlines */
+  body.modern::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  /* tonal elevation: borders off, soft layered shadows on */
+  body.modern .ring-card, body.modern .sparky-card, body.modern .signal-card, body.modern .directive-card,
+  body.modern .chart-card, body.modern .ach-card, body.modern .crew-card, body.modern .quick-btn,
+  body.modern .sys-row, body.modern .hist-row, body.modern .chapter-card, body.modern .modal, body.modern .today-card {
+    border-color:transparent; border-radius:var(--radius);
+    box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px rgba(0,0,0,.30);
+  }
+  body.modern .signal-card { border:1px solid rgba(46,230,195,.20); }      /* the hero keeps its edge */
+  body.modern .chapter-card { border-left:3px solid var(--teal-dim); }     /* logbook keeps its spine */
+  body.modern .chapter-card.unread { border-left-color:var(--amber); }
+  body.modern .chapter-card.locked { border-left-color:transparent; }
+  /* ring trio reads as ONE card */
+  body.modern .rings-grid { background:var(--surface); border-radius:var(--radius); padding:12px 4px; gap:0;
+    box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px rgba(0,0,0,.30); }
+  body.modern .ring-card { background:transparent; box-shadow:none; border:none; }
+  /* typography discipline: display stays techy, labels calm down */
+  body.modern .topbar-title { letter-spacing:1px; text-shadow:0 0 24px var(--glow-teal); }
+  body.modern .topbar-sub { letter-spacing:.4px; font-family:'Oxanium'; }
+  body.modern .section-head { font-family:'Oxanium'; font-weight:700; font-size:11px; letter-spacing:1.4px; }
+  body.modern .ring-label { letter-spacing:.8px; font-family:'Oxanium'; font-weight:600; }
+  body.modern .quick-btn { background:var(--surface2); border:none; font-family:'Oxanium'; }
+  body.modern .quick-btn-text { text-transform:none; letter-spacing:.3px; font-size:11px; font-weight:600; }
+  body.modern .signal-head, body.modern .directive-label, body.modern .chart-title { font-family:'Oxanium'; font-weight:600; letter-spacing:1.2px; }
+  /* pills and bars */
+  body.modern .streak-badge { border:none; border-radius:999px; background:rgba(245,182,87,.13); }
+  body.modern .signal-bar-wrap { border:none; height:8px; border-radius:999px; background:rgba(255,255,255,.07); }
+  body.modern .signal-bar, body.modern .crew-bond { border-radius:999px; }
+  body.modern .crew-bond-wrap { border:none; border-radius:999px; background:rgba(255,255,255,.07); }
+  /* bottom nav: blurred, safe-area aware, active pill */
+  body.modern .navbar { border-top:none; background:rgba(11,13,18,.82); backdrop-filter:blur(16px);
+    padding-bottom:env(safe-area-inset-bottom); }
+  body.modern .nav-btn { font-family:'Oxanium'; font-weight:600; font-size:10px; letter-spacing:.4px; text-transform:none; }
+  body.modern .nav-btn .nav-ico { padding:3px 14px; border-radius:999px; margin:0 auto 3px; width:fit-content; transition:background .15s; }
+  body.modern .nav-btn.active .nav-ico { background:rgba(46,230,195,.14); }
+  body.modern .nav-btn.active { text-shadow:none; }
+  /* modal as a sheet with a grab handle */
+  body.modern .modal { border:none; border-radius:22px 22px 0 0; }
+  body.modern .modal::before { content:''; display:block; width:40px; height:4px; border-radius:2px;
+    background:rgba(255,255,255,.18); margin:0 auto 14px; }
+  body.modern .modal-btn { border-radius:12px; letter-spacing:1px; }
+  body.modern .modal-input, body.modern .sys-input { border-radius:10px; border:1px solid rgba(255,255,255,.08); font-family:'Oxanium'; }
+  body.modern .chip { border-radius:999px; border:1px solid rgba(255,255,255,.08); font-family:'Oxanium'; }
+  body.modern .mood-btn { border-radius:12px; border:1px solid rgba(255,255,255,.08); }
+  body.modern .mood-btn.sel { border-color:var(--teal); }
+  /* press micro-interactions */
+  body.modern .quick-btn, body.modern .chip, body.modern .modal-btn, body.modern .mood-btn, body.modern .ring-card { transition:transform .12s ease, background .12s ease, box-shadow .12s ease; }
+  body.modern .quick-btn:active, body.modern .chip:active, body.modern .modal-btn:active, body.modern .mood-btn:active { transform:scale(.96); }
+  body.modern #toast { border:none; border-radius:12px; background:#222936; box-shadow:0 12px 30px rgba(0,0,0,.5); font-family:'Oxanium'; }
+  body.modern #toast.horror { background:#2a151b; color:var(--danger); font-family:'VT323'; }   /* horror keeps its voice */
+  body.modern .sparky-orb { box-shadow:0 0 20px var(--glow-teal); }
+  body.modern .vn-title { letter-spacing:1px; }
+  body.modern .vn-next { border-radius:999px; border:none; background:rgba(46,230,195,.13); font-family:'Oxanium'; font-weight:600; }
+  body.modern .sys-btn { border-radius:12px; }
+  body.modern .ach-card.unlocked { border:1px solid rgba(245,182,87,.25); }
+  /* perf guard: when heavy horror runs, drop the costly compositing extras */
+  body.modern.g3::after, body.modern.g4::after { display:none; }
+  body.modern.g3 .navbar, body.modern.g4 .navbar { backdrop-filter:none; background:rgba(11,13,18,.96); }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { height:100%; }
   body {
@@ -128,11 +256,12 @@
   #app { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; max-width:520px; margin:0 auto; }
   .screen { display:none; flex-direction:column; flex:1; min-height:0; }
   .screen.active { display:flex; }
-  .scroll-content { flex:1; overflow-y:auto; padding:14px 16px 90px; }
+  .scroll-content { flex:1; overflow-y:auto; padding:14px 16px calc(96px + env(safe-area-inset-bottom)); }
   .scroll-content::-webkit-scrollbar { width:0; }
 
   .topbar {
-    padding:14px 16px 10px; display:flex; justify-content:space-between; align-items:flex-start;
+    padding:calc(14px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+    display:flex; justify-content:space-between; align-items:flex-start;
     border-bottom:1px solid var(--border);
     background:rgba(6,10,14,0.92); backdrop-filter:blur(6px);
   }
@@ -176,6 +305,7 @@
   .ring-sub { font-size:9px; color:var(--text-dim); margin-top:1px; }
   .ring-label { font-size:10px; letter-spacing:1.5px; color:var(--text-dim); margin-top:4px; text-transform:uppercase; }
   .ring-goalmet { font-size:9px; margin-top:3px; letter-spacing:1px; }
+  .ring-steps { font-size:9px; margin-top:3px; letter-spacing:.5px; color:var(--amber); opacity:.85; min-height:11px; }
 
   /* ══════ SPARKY ══════ */
   .sparky-card {
@@ -190,6 +320,34 @@
     animation:hover 3.4s ease-in-out infinite;
   }
   @keyframes hover { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
+  /* pixel Sparky animations */
+  .px-sparky { image-rendering:pixelated; }
+  .px-wingL { transform-origin:3px 7px; animation:flutterL 0.5s steps(2) infinite; }
+  .px-wingR { transform-origin:13px 7px; animation:flutterR 0.5s steps(2) infinite; }
+  @keyframes flutterL { 0%,100%{transform:scaleX(1);} 50%{transform:scaleX(0.4);} }
+  @keyframes flutterR { 0%,100%{transform:scaleX(1);} 50%{transform:scaleX(0.4);} }
+  .px-eyes { animation:blink 3.2s steps(1) infinite; }
+  @keyframes blink { 0%,92%,100%{opacity:1;} 95%{opacity:0.1;} }
+  .px-ant { animation:antpulse 1.4s steps(2) infinite; }
+  @keyframes antpulse { 0%,100%{fill:#ffd166;} 50%{fill:#fff3c0;} }
+  /* pet reaction + wandering sprite + hearts */
+  .sparky-orb.petted { animation:petwiggle 0.5s steps(2) 2; }
+  @keyframes petwiggle { 0%{transform:rotate(0) scale(1);} 25%{transform:rotate(-12deg) scale(1.12);} 75%{transform:rotate(12deg) scale(1.12);} 100%{transform:rotate(0) scale(1);} }
+  .pet-heart { position:fixed; z-index:970; color:#ff6b8a; font-size:20px; pointer-events:none; animation:heartfloat 0.9s ease-out forwards; }
+  @keyframes heartfloat { 0%{opacity:0; transform:translate(-50%,0) scale(0.5);} 30%{opacity:1;} 100%{opacity:0; transform:translate(-50%,-40px) scale(1.2);} }
+  .sparky-sprite { position:fixed; z-index:850; width:56px; height:56px; cursor:pointer; filter:drop-shadow(2px 2px 0 rgba(0,0,0,0.5)); }
+  .sparky-sprite .px-wingL, .sparky-sprite .px-wingR { animation:flutterL 0.4s steps(2) infinite; transform-origin:center; }
+  /* ── 8-bit sprite-sheet Sparky · drops in automatically when sparky-sheet.png exists (4 cols × 4 rows) ── */
+  .spx { width:56px; height:56px; image-rendering:pixelated; background:url('sparky-sheet.png') no-repeat 0 0; background-size:224px 224px; }
+  .spx.idle  { animation:spx-idle  1.1s  steps(4) infinite; }
+  .spx.walk  { animation:spx-walk  0.55s steps(4) infinite; }
+  .spx.happy { animation:spx-happy 0.5s  steps(4) infinite; }
+  .spx.alert { animation:spx-alert 0.7s  steps(4) infinite; }
+  @keyframes spx-idle  { from{background-position:0 0}       to{background-position:-224px 0} }
+  @keyframes spx-walk  { from{background-position:0 -56px}   to{background-position:-224px -56px} }
+  @keyframes spx-happy { from{background-position:0 -112px}  to{background-position:-224px -112px} }
+  @keyframes spx-alert { from{background-position:0 -168px}  to{background-position:-224px -168px} }
+  body.spx-ready .sparky-orb .px-sparky, body.spx-ready .sparky-sprite .px-sparky { display:none; }
   .sparky-name { font-family:'Oxanium'; font-weight:700; font-size:13px; letter-spacing:1.5px; color:var(--teal); }
   .sparky-line { font-size:11px; color:var(--text-dim); margin-top:3px; line-height:1.5; font-style:italic; }
 
@@ -272,6 +430,17 @@
   .ach-name { font-size:9px; letter-spacing:0.5px; margin-top:5px; color:var(--text); line-height:1.4; }
   .ach-cond { font-size:8px; color:var(--text-dim); margin-top:3px; }
 
+  /* ══════ HISTORY LOG ══════ */
+  .hist-row { background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:10px 12px; margin-bottom:8px; }
+  .hist-head { display:flex; align-items:center; gap:8px; }
+  .hist-dot { width:9px; height:9px; border-radius:50%; flex:none; }
+  .hist-date { font-family:'Oxanium',sans-serif; font-weight:600; font-size:12px; letter-spacing:1px; color:var(--text); text-transform:uppercase; flex:1; }
+  .hist-goals { font-size:11px; color:var(--text-dim); letter-spacing:1px; }
+  .hist-chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+  .hist-chip { font-size:10px; background:var(--surface2); border:1px solid var(--border); border-radius:3px; padding:3px 7px; color:var(--text); letter-spacing:0.3px; }
+  .hist-empty { font-size:10px; color:var(--text-dim); font-style:italic; }
+  .hist-journal { font-size:10px; color:var(--text-dim); margin-top:7px; line-height:1.5; font-style:italic; }
+
   /* ══════ SYSTEM ══════ */
   .sys-row { display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:12px 14px; margin-bottom:9px; }
   .sys-label { font-size:12px; }
@@ -283,6 +452,7 @@
   .navbar {
     position:fixed; bottom:0; left:0; right:0; max-width:520px; margin:0 auto; z-index:100;
     display:flex; background:rgba(6,10,14,0.96); border-top:1px solid var(--border); backdrop-filter:blur(8px);
+    padding-bottom:env(safe-area-inset-bottom);
   }
   .nav-btn {
     flex:1; background:none; border:none; color:var(--text-dim); font-family:'Share Tech Mono';
@@ -306,6 +476,8 @@
   .chip-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
   .chip { background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); font-family:'Share Tech Mono'; font-size:11px; padding:7px 12px; border-radius:3px; cursor:pointer; }
   .chip:active, .chip.sel { border-color:var(--teal); color:var(--teal); }
+  .food-est { font-size:12px; line-height:1.55; margin-top:9px; color:var(--text); }
+  .food-est:empty { margin-top:0; }
   .fc-opt { background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:11px 12px; margin-bottom:9px; cursor:pointer; transition:all 0.15s; }
   .fc-opt.sel { border-color:var(--teal); box-shadow:0 0 10px var(--glow-teal); }
   .mood-row { display:flex; gap:8px; margin-bottom:14px; }
@@ -406,6 +578,8 @@
           <div class="ring-value glitchable" style="color:var(--amber)" id="val-move">0m</div>
           <div class="ring-sub" id="sub-move">/ 30 min</div>
           <div class="ring-label">Exertion</div>
+          <div class="ring-steps" id="val-steps"></div>
+          <div class="ring-steps" id="val-burn" style="color:#ff8a4a;"></div>
           <div class="ring-goalmet" id="met-move"></div>
         </div>
         <div class="ring-card" onclick="openLog('mind')">
@@ -416,24 +590,34 @@
           <div class="ring-value glitchable" style="color:var(--violet)" id="val-mind">—</div>
           <div class="ring-sub">psych eval</div>
           <div class="ring-label">Mind</div>
+          <div class="ring-steps" id="val-sleep" style="color:var(--violet);"></div>
+          <div class="ring-steps" id="val-recovery" style="color:#ff6b8a;"></div>
+          <div class="ring-steps" id="val-cycle" style="color:#e07a9e;"></div>
           <div class="ring-goalmet" id="met-mind"></div>
         </div>
       </div>
 
       <div class="sparky-card">
-        <div class="sparky-orb" id="sparky-orb">
-          <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <g stroke="#3ee6c1" stroke-width="2" fill="none" stroke-linecap="round">
-              <ellipse cx="50" cy="52" rx="14" ry="12" fill="#0a201b"/>
-              <path d="M38 48 Q26 40 20 42"/><path d="M38 56 Q26 58 22 66"/>
-              <path d="M62 48 Q74 40 80 42"/><path d="M62 56 Q74 58 78 66"/>
-              <path d="M42 42 Q36 30 42 24" opacity="0.7"/><path d="M58 42 Q64 30 58 24" opacity="0.7"/>
-              <circle cx="45" cy="50" r="3" fill="#3ee6c1"/><circle cx="55" cy="50" r="3" fill="#3ee6c1"/>
-            </g>
+        <div class="sparky-orb" id="sparky-orb" onclick="petSparky()" style="cursor:pointer;" title="pet me!">
+          <svg width="40" height="40" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" class="px-sparky">
+            <!-- antenna + lamp -->
+            <rect class="px-ant" x="7" y="1" width="2" height="2" fill="#ffd166"/>
+            <rect x="7" y="3" width="2" height="1" fill="#3aa892"/>
+            <!-- wings (flutter) -->
+            <g class="px-wingL"><rect x="1" y="6" width="2" height="3" fill="#c9a4ff"/><rect x="3" y="7" width="1" height="2" fill="#c9a4ff"/></g>
+            <g class="px-wingR"><rect x="13" y="6" width="2" height="3" fill="#c9a4ff"/><rect x="12" y="7" width="1" height="2" fill="#c9a4ff"/></g>
+            <!-- body -->
+            <rect x="4" y="5" width="8" height="6" fill="#0a201b" stroke="#4ef2c8" stroke-width="0.5"/>
+            <rect x="4" y="5" width="8" height="1" fill="#4ef2c8"/>
+            <!-- eyes (blink) -->
+            <g class="px-eyes"><rect x="6" y="7" width="1" height="2" fill="#4ef2c8"/><rect x="9" y="7" width="1" height="2" fill="#4ef2c8"/></g>
+            <!-- legs -->
+            <rect x="5" y="11" width="1" height="2" fill="#3aa892"/><rect x="7" y="11" width="1" height="2" fill="#3aa892"/>
+            <rect x="8" y="11" width="1" height="2" fill="#3aa892"/><rect x="10" y="11" width="1" height="2" fill="#3aa892"/>
           </svg>
         </div>
         <div>
-          <div class="sparky-name">SPARKY <span style="color:var(--text-dim);font-weight:400;font-size:10px;" id="sparky-mood">// nominal</span></div>
+          <div class="sparky-name"><span id="companion-name">SPARKY</span> <span style="color:var(--text-dim);font-weight:400;font-size:10px;" id="sparky-mood">// nominal</span></div>
           <div class="sparky-line glitchable" id="sparky-line">Boot sequence complete. Hello, Koko.</div>
         </div>
       </div>
@@ -445,6 +629,7 @@
         <button class="quick-btn" onclick="openLog('mind')"><span class="quick-btn-icon">🧠</span><span class="quick-btn-text">Psych Eval</span></button>
         <button class="quick-btn" onclick="openLog('care')"><span class="quick-btn-icon">🧴</span><span class="quick-btn-text">Care</span></button>
       </div>
+      <button class="modal-btn" style="margin-top:10px;" onclick="openConvo()">✧ Tell <span id="convo-btn-name">the station</span> what you did</button>
 
       <div class="directive-card">
         <div class="directive-label" id="directive-label">▸ STATION DIRECTIVE</div>
@@ -458,7 +643,7 @@
     <div class="topbar">
       <div>
         <div class="topbar-title glitchable">LOGBOOK</div>
-        <div class="topbar-sub">Koko's records // unlock by holding your goals</div>
+        <div class="topbar-sub" id="logbook-sub">Koko's records // unlock by holding your goals</div>
       </div>
       <div class="streak-badge" id="story-count">0/0</div>
     </div>
@@ -496,6 +681,8 @@
       <div id="strain-wrap"></div>
       <div class="section-head">Commendations</div>
       <div class="ach-grid" id="ach-grid"></div>
+      <div class="section-head">History log</div>
+      <div id="history-log"></div>
     </div>
   </div>
 
@@ -520,12 +707,61 @@
         <div><div class="sys-label">Horror effects</div><div class="sys-sub">interface degradation when signal drops</div></div>
         <input type="checkbox" id="cfg-horror" checked onchange="saveCfg()" style="width:20px;height:20px;accent-color:#3ee6c1;">
       </div>
+      <div class="sys-row">
+        <div><div class="sys-label">Reminders</div><div class="sys-sub" id="remind-sub">station pings to log your goals (installed app only)</div></div>
+        <input type="checkbox" id="cfg-remind" onchange="saveCfg()" style="width:20px;height:20px;accent-color:#3ee6c1;">
+      </div>
+      <div class="sys-row" id="remind-times" style="display:none;">
+        <div><div class="sys-label">Reminder times</div><div class="sys-sub">morning forecast · midday check · evening wrap-up</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+          <input class="sys-input" style="width:88px;" type="time" id="cfg-remind-am" onchange="saveCfg()">
+          <input class="sys-input" style="width:88px;" type="time" id="cfg-remind-mid" onchange="saveCfg()">
+          <input class="sys-input" style="width:88px;" type="time" id="cfg-remind-pm" onchange="saveCfg()">
+        </div>
+      </div>
+      <div class="sys-row">
+        <div><div class="sys-label">Cycle tracking</div><div class="sys-sub">private, on this device — predicts your phase &amp; energy under the Mind card</div></div>
+        <input type="checkbox" id="cfg-cycle" onchange="saveCfg()" style="width:20px;height:20px;accent-color:#e07a9e;">
+      </div>
+      <div id="cycle-opts" style="display:none;">
+        <div class="sys-row">
+          <div><div class="sys-label">Cycle &amp; period length</div><div class="sys-sub">days per cycle · days of period</div></div>
+          <div style="display:flex;gap:6px;justify-content:flex-end;">
+            <input class="sys-input" style="width:70px;" type="number" id="cfg-cyclelen" min="20" max="45" onchange="saveCfg()">
+            <input class="sys-input" style="width:70px;" type="number" id="cfg-periodlen" min="2" max="10" onchange="saveCfg()">
+          </div>
+        </div>
+        <div class="sys-row" style="flex-direction:column;align-items:stretch;gap:9px;">
+          <div><div class="sys-label">Period start</div><div class="sys-sub" id="cycle-status">set the first day of your last period</div></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="sys-input" style="flex:1;" type="date" id="cfg-cyclestart" onchange="setCycleStart(this.value)">
+            <button class="chip" onclick="setCycleStart('today')">🩸 Started today</button>
+          </div>
+          <button class="chip" id="cycle-import-btn" style="text-align:center;display:none;" onclick="hcCycleImport(true)">⌚ Import period date from Health Connect</button>
+        </div>
+      </div>
+      <div class="sys-row">
+        <div><div class="sys-label">Perspective</div><div class="sys-sub">whose signal are you holding? switching reloads the terminal</div></div>
+        <select class="sys-input" id="cfg-pov" onchange="setPov(this.value)">
+          <option value="koko">Koko</option>
+          <option value="rook">Henry Rook</option>
+        </select>
+      </div>
+      <div class="sys-row">
+        <div><div class="sys-label">Interface vibe</div><div class="sys-sub">8-bit cute or dark station — auto matches your perspective, or force one</div></div>
+        <select class="sys-input" id="cfg-theme" onchange="setTheme(this.value)">
+          <option value="auto">Auto (match POV)</option>
+          <option value="bubbly">8-bit cute</option>
+          <option value="dark">Dark station</option>
+          <option value="modern">Modern noir</option>
+        </select>
+      </div>
       <div class="sys-row" style="flex-direction:column;align-items:stretch;gap:9px;">
         <div>
-          <div class="sys-label">Tracker uplink — Fitbit</div>
-          <div class="sys-sub">register a free app at dev.fitbit.com (type: Personal, OAuth type: Client, redirect URL = this page's address, scopes: activity + sleep), then paste the Client ID and connect. active minutes fill the exertion ring; sleep powers the strain ledger.</div>
+          <div class="sys-label" id="tracker-label">Tracker uplink — Fitbit</div>
+          <div class="sys-sub" id="tracker-sub">register a free app at dev.fitbit.com (type: Personal, OAuth type: Client, redirect URL = this page's address, scopes: activity + sleep), then paste the Client ID and connect. active minutes fill the exertion ring; sleep powers the strain ledger.</div>
         </div>
-        <input class="modal-input" style="margin:0;" type="text" id="cfg-fbid" placeholder="Fitbit Client ID (e.g. 23ABCD)" onchange="saveCfg()">
+        <div id="cfg-fbid-row"><input class="modal-input" style="margin:0;width:100%;" type="text" id="cfg-fbid" placeholder="Fitbit Client ID (e.g. 23ABCD)" onchange="saveCfg()"></div>
         <div style="display:flex;gap:8px;">
           <button class="chip" style="flex:1;text-align:center;" onclick="fbConnect()">⌚ CONNECT</button>
           <button class="chip" style="flex:1;text-align:center;" onclick="fbSync(true)">⟲ SYNC NOW</button>
@@ -539,6 +775,8 @@
           <div class="sys-sub">paste a free Gemini API key from aistudio.google.com and the station starts writing itself around your real days. blank = hand-written content only. the key never leaves this device.</div>
         </div>
         <input class="modal-input" style="margin:0;" type="password" id="cfg-aikey" placeholder="AIza..." onchange="saveCfg()">
+        <input class="modal-input" style="margin:0;" type="text" id="cfg-aimodel" placeholder="model id (default: gemini-3.1-flash-lite)" onchange="saveCfg()">
+        <div class="sys-sub" style="margin-top:-2px;">advanced: change only if the default model is unavailable. blank = default. auto-falls back to gemini-flash-latest on error.</div>
         <button class="chip" style="text-align:center;" onclick="testAI()">⟲ TEST UPLINK</button>
         <div class="sys-sub" id="ai-status"></div>
       </div>
@@ -577,6 +815,13 @@
     <div class="modal-title" id="log-title">—</div>
     <div class="modal-sub" id="log-sub">—</div>
     <div id="log-meal-body" style="display:none;">
+      <div id="food-ai" style="margin-bottom:12px;">
+        <div style="display:flex; gap:8px;">
+          <input class="modal-input" style="margin-bottom:0; flex:1;" id="food-ai-input" placeholder="describe it — e.g. 'two eggs & toast'" onkeydown="if(event.key==='Enter'){event.preventDefault();estimateFood();}">
+          <button class="chip" style="white-space:nowrap;" onclick="estimateFood()">✨ Estimate</button>
+        </div>
+        <div id="food-ai-out" class="food-est"></div>
+      </div>
       <input class="modal-input" type="number" id="log-kcal-input" placeholder="kcal (e.g. 550)">
       <div class="chip-row">
         <button class="chip" onclick="setKcal(350)">Small · 350</button>
@@ -601,6 +846,7 @@
       </div>
     </div>
     <div id="log-mind-body" style="display:none;">
+      <div class="food-est" id="mind-sleep-hint" style="margin-top:0;margin-bottom:10px;"></div>
       <div class="mood-row">
         <button class="mood-btn" data-m="1" onclick="pickMood(1,this)">🌑</button>
         <button class="mood-btn" data-m="2" onclick="pickMood(2,this)">🌘</button>
@@ -614,20 +860,32 @@
   </div>
 </div>
 
+<!-- CONVERSATIONAL LOG MODAL -->
+<div class="modal-bg" id="convo-modal" onclick="closeConvo(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="convo-title">TELL THE STATION</div>
+    <div class="modal-sub" id="convo-sub">say what you did in plain words — "walked 40 min, chicken salad, brushed my teeth". if it's vague, I'll ask a quick question before logging.</div>
+    <textarea class="modal-input" id="convo-input" rows="3" style="resize:none;" placeholder="e.g. jogged 30 minutes, two eggs and toast, feeling good today" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();sendConvo();}"></textarea>
+    <div id="convo-out" class="food-est"></div>
+    <button class="modal-btn" id="convo-send" onclick="sendConvo()">✧ Log it</button>
+  </div>
+</div>
+
 <!-- FORECAST MODAL -->
 <div class="modal-bg" id="fc-modal" onclick="closeForecast(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title">SHIFT FORECAST</div>
-    <div class="modal-sub">SPARKY: "How much exercise will be done today, Koko?" — this books your ration limit. In between two? The station always books the lower ration.</div>
+    <div class="modal-sub" id="forecast-ask">SPARKY: "How much exercise will be done today, Koko?" — this books your ration limit. In between two? The station always books the lower ration.</div>
     <div id="fc-options"></div>
     <button class="modal-btn" onclick="confirmForecast()">File Forecast</button>
   </div>
 </div>
 
 <div id="toast"></div>
+<script src="rook.lore.js"></script>
 <script>
 /* ═══════════════ PERSISTENCE ═══════════════ */
-const DEF_CFG = { kcal: 2000, move: 30, horror: true };
+const DEF_CFG = { kcal: 2000, move: 30, horror: true, remind:false, remindAM:'09:00', remindMid:'15:00', remindPM:'20:00', cycleTrack:false, cycleLen:28, periodLen:5 };
 function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function keyOffset(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function loadDay(k){ try{ return JSON.parse(localStorage.getItem('ksd_day_'+k))||{kcal:0,move:0,mood:0,journal:'',careSkin:false,careTeeth:false}; }catch(e){ return {kcal:0,move:0,mood:0,journal:'',careSkin:false,careTeeth:false}; } }
@@ -641,7 +899,7 @@ let today = loadDay(todayKey());
 /* ═══════════════ SHIFT FORECAST ═══════════════ */
 /* morning question: "how much exercise will be done today?" -> books the day's kcal limit.
    In-between answers always take the LOWER limit (thresholds are floors). */
-const FORECAST=[
+let FORECAST=[
   {kcal:1750, name:'Inactive', min:0,
    desc:'Sitting most of the shift, no structured exercise. Desk work, transit, evenings at the console. Often under ~5,000 steps.'},
   {kcal:1900, name:'Somewhat Active', min:20,
@@ -662,6 +920,46 @@ function goalKcal(d){ const L=kcalLimit(d); return d.kcal >= L*0.6 && d.kcal <= 
 function goalMove(d){ return effMove(d) >= meta.cfg.move; }
 function goalMind(d){ return d.mood > 0; }
 function goalsMet(d){ return (goalKcal(d)?1:0)+(goalMove(d)?1:0)+(goalMind(d)?1:0); }
+/* sleep helpers — display + an informational nudge for the psych eval (never sets mood) */
+function sleepHours(min){ return Math.round((min||0)/6)/10; }
+function sleepHint(min){
+  if(!min || min<=0) return '<span style="color:var(--text-dim)">no sleep data — connect a tracker in ⚙ System to see last night.</span>';
+  const h=sleepHours(min);
+  let tag, col;
+  if(min>=420){ tag='a full night — recovery in the bank.'; col='var(--teal)'; }
+  else if(min>=360){ tag='a decent night.'; col='var(--teal)'; }
+  else if(min>=300){ tag='a short night — go easy on yourself.'; col='var(--amber)'; }
+  else { tag='a rough night. running on fumes is allowed to feel hard.'; col='var(--danger)'; }
+  return '<span style="color:'+col+'">😴 '+h+'h last night</span> <span style="color:var(--text-dim)">— '+tag+' rate how you actually feel, not how you \u201cshould\u201d.</span>';
+}
+/* Cycle tracking (in-app, on-device). Computes the current phase from the logged
+   period-start date + cycle/period length, and maps each phase to a predicted-mood
+   icon. This is a calendar ESTIMATE, never a medical prediction. */
+function cycleDayNum(k){
+  if(!meta.cfg.cycleTrack || !meta.cycleStart) return null;
+  const start=new Date(meta.cycleStart+'T00:00:00'), day=new Date((k||todayKey())+'T00:00:00');
+  const cl=Math.max(20, Math.min(45, meta.cfg.cycleLen||28));
+  let diff=Math.floor((day-start)/86400e3);
+  if(diff<0) return null;                 // before the logged start
+  return (diff % cl) + 1;                 // 1-indexed cycle day, wraps each cycle
+}
+function cyclePhase(k){
+  const d=cycleDayNum(k); if(d==null) return null;
+  const cl=Math.max(20, Math.min(45, meta.cfg.cycleLen||28));
+  const pl=Math.max(2, Math.min(10, meta.cfg.periodLen||5));
+  const ovul=Math.max(pl+2, cl-14);       // luteal phase ~14 days; ovulation ~14 before next period
+  let name, icon, mood, note;
+  if(d<=pl){ name='Menstrual'; icon='🩸'; mood='🌘'; note='low energy — rest and be gentle with yourself'; }
+  else if(d < ovul-1){ name='Follicular'; icon='🌱'; mood='🌔'; note='energy on the rise — good days to build momentum'; }
+  else if(d <= ovul+1){ name='Ovulation'; icon='✨'; mood='🌕'; note='peak energy and mood — ride it'; }
+  else if(d >= cl-3){ name='Late luteal'; icon='🌧️'; mood='🌘'; note='PMS window — dips and irritability are normal, extra kindness'; }
+  else { name='Early luteal'; icon='🌙'; mood='🌗'; note='steady but mellowing — pace yourself'; }
+  return {day:d, name, icon, mood, note, cl};
+}
+function cycleLine(k){
+  const c=cyclePhase(k); if(!c) return '';
+  return c.icon+' Day '+c.day+' · '+c.name+' '+c.mood;
+}
 
 /* aggregate stats over history */
 function stats(){
@@ -722,7 +1020,7 @@ function computeSignal(){
   return Math.max(2, Math.min(100, Math.round(sig)));
 }
 function signalTier(sig){ return sig>=75?0 : sig>=50?1 : sig>=25?2 : 3; }
-const TIER_INFO=[
+let TIER_INFO=[
   {label:'STABLE',   color:'#3ee6c1', note:'All decks quiet. Sparky hums a little tune.'},
   {label:'UNEASY',   color:'#ffb347', note:'Minor interference on deck 7. Probably the air recyclers. Probably.'},
   {label:'DEGRADED', color:'#ff8a4a', note:'Something is chewing the station feed. Katie has been notified.'},
@@ -731,7 +1029,7 @@ const TIER_INFO=[
 
 /* ═══════════════ GLITCH ENGINE ═══════════════ */
 let curTier=0;
-const HORROR_MSGS=[
+let HORROR_MSGS=[
   'motion detected — cargo bay 4 — no lifesigns',
   'sparky is playing the low triple-chime again. he only plays it when something is listening.',
   'hull mic picks up scratching. exterior. we are in vacuum.',
@@ -776,6 +1074,7 @@ function glitchBurst(strength){
   setTimeout(()=>tear.style.opacity='0', 300);
   const els=[...document.querySelectorAll('.glitchable')].filter(e=>e.offsetParent);
   for(let i=0;i<strength;i++){ const e=els[Math.floor(Math.random()*els.length)]; if(e)scramble(e); }
+  if(window.SPX&&SPX.ok) setSparkyState('alert', 900);
 }
 function horrorFlash(){
   const f=document.getElementById('glitch-flash');
@@ -811,7 +1110,7 @@ setInterval(glitchTick, 3000);
 
 /* ═══════════════ STORY ═══════════════ */
 /* speakers: koko rook katie sparky gary other horror narr */
-const CHAPTERS=[
+let CHAPTERS=[
 { id:'ch1', title:'Stowaway', cond:'Transmit your first log', test:s=>s.any,
   scene:[
     ['narr','Cargo crate KX-201 opens from the inside. A grease-streaked girl with chaotic blonde curls unfolds herself from between coolant drums, nineteen years old and sore in every joint.'],
@@ -1037,12 +1336,12 @@ const CHAPTERS=[
     ['narr','END OF ARC ONE. Keep your signal strong, Koko. The station isn\'t done with you.'],
   ]},
 ];
-const SPEAKERS={koko:'KOKO', rook:'ROOK', katie:'KATIE', sparky:'SPARKY', gary:'GARY', other:'???', horror:'▓▓▓', narr:''};
+let SPEAKERS={koko:'KOKO', rook:'ROOK', katie:'KATIE', sparky:'SPARKY', gary:'GARY', other:'???', horror:'▓▓▓', narr:''};
 
 /* ═══════════════ DOCKSIDE RUN-INS ═══════════════
    Journaling = Koko writing up the courage to talk to Gary.
    Each journaled day advances the counter; no recent journal -> his cutter doesn't dock. */
-const GARY_EVENTS=[
+let GARY_EVENTS=[
 { id:'g1', need:1, title:'Nod Count: One',
   scene:[
     ['narr','Journal entry one. Koko writes half a page about intermix ratios and one sentence about something else.'],
@@ -1115,25 +1414,25 @@ const GARY_EVENTS=[
 /* ═══════════════ STATION DAYS — reactive daily log ═══════════════
    Every completed day gets an auto-written entry reflecting what Koko
    actually did (or didn't). Fragments below; AI narrator can override. */
-const DL_OPEN={
+let DL_OPEN={
   0:['The cycle closes with the deck lights warm and steady. A good day, by the station\'s ledger.','Signal held all cycle. Sparky spent the evening idle-humming, which is his version of whistling.'],
   1:['The cycle closes with a faint static edge on the feed. Livable. Watchful.','A day with a hairline crack in it somewhere. Nothing you could point to. Sparky pointed at it twice anyway.'],
   2:['The cycle closes badly — the feed chewed and stuttering, the dark parts of the deck darker than the ledger says they should be.','A degraded day. The lights on the trunk line dipped four times. The maintenance log says zero times.'],
   3:['The cycle barely closes at all. The terminal spent the day running on residual charge and stubbornness.','A flatline day. Sparky stood watch on the shelf with his lamp off, saving power for whatever comes.'],
 };
-const DL_EAT_MET=['Rations were real today — logged, honest, warm. Chen\'s counter is starting to hold her seat without being asked.','She ate like someone planning to be alive next week. Sparky stamped the log with his little HONEST fanfare.'];
-const DL_EAT_NONE=['No rations logged. By evening Sparky had nudged the same unopened bar across the shelf three times, one click each. She pretended not to see. He pretended not to count.','Nothing eaten, or nothing admitted. The stomach and the ledger disagree, and Sparky believes the stomach.'],
+let DL_EAT_MET=['Rations were real today — logged, honest, warm. Chen\'s counter is starting to hold her seat without being asked.','She ate like someone planning to be alive next week. Sparky stamped the log with his little HONEST fanfare.'];
+let DL_EAT_NONE=['No rations logged. By evening Sparky had nudged the same unopened bar across the shelf three times, one click each. She pretended not to see. He pretended not to count.','Nothing eaten, or nothing admitted. The stomach and the ledger disagree, and Sparky believes the stomach.'],
 DL_EAT_OVER=['The rations ran heavy today — well past the filed limit. The station doesn\'t judge. The audit drones, however, take notes.','Too much, too fast, the way people eat when something underneath the day is gnawing. Sparky logged it without a chime.'],
 DL_EAT_UNDER=['Some food, not enough — engine running on fumes and pride. Sparky flagged the shortfall in amber.','She undershot the rations and called it discipline. Sparky filed it under a different word.'];
-const DL_MOVE_MET=['The body got its work today — causeways, crates, the good ache. Dock legs, getting stronger.','Exertion logged and honest. Somewhere on the ring, her shortcut times are quietly improving.'],
+let DL_MOVE_MET=['The body got its work today — causeways, crates, the good ache. Dock legs, getting stronger.','Exertion logged and honest. Somewhere on the ring, her shortcut times are quietly improving.'],
 DL_MOVE_NONE=['No exertion logged. The vents felt smaller today, or she fit them worse. Sparky ran his map of the deck twice, alone.','A still day. The kind the station notices — soft things get noticed here first.'];
-const DL_MIND_HIGH=['The psych eval came back bright. Sparky replayed a half-second of her laugh, twice, at low volume, for himself.','Eval logged: steady. The dark parts of the deck kept their distance tonight.'],
+let DL_MIND_HIGH=['The psych eval came back bright. Sparky replayed a half-second of her laugh, twice, at low volume, for himself.','Eval logged: steady. The dark parts of the deck kept their distance tonight.'],
 DL_MIND_MID=['The psych eval came back level. Not good, not bad — holding. On this station, holding is a skill.','Eval logged: flat calm. Sparky accepted it the way harbors accept grey weather.'],
 DL_MIND_LOW=['The psych eval came back heavy. Sparky sat closer than usual all evening and asked for nothing.','A low eval. He dimmed the nest light early and played the quiet three-note tune she never told him she liked.'],
 DL_MIND_NONE=['No psych eval. The silence went into the file where Sparky keeps the things he cannot fix. That file is getting thick.','Eval skipped. Down the trunk line, once, something knocked — as if the unsaid things had been heard anyway.'];
-const DL_CARE_MET=['Teeth, face, the fancy soap. Armor on. The cracked mirror reported: still her, still ready.','The care routine held. Small dignities, stacked daily, are how stowaways become residents.'];
-const DL_AUDIT_FAIL=['The forecast didn\'t survive its audit — the claimed shift and the logged work don\'t match. The station remembers. It always remembers.','An overclaimed forecast, flagged in red. Somewhere in the tower, a drone with a clipboard soul underlined her terminal ID.'];
-const DL_CLOSE={
+let DL_CARE_MET=['Teeth, face, the fancy soap. Armor on. The cracked mirror reported: still her, still ready.','The care routine held. Small dignities, stacked daily, are how stowaways become residents.'];
+let DL_AUDIT_FAIL=['The forecast didn\'t survive its audit — the claimed shift and the logged work don\'t match. The station remembers. It always remembers.','An overclaimed forecast, flagged in red. Somewhere in the tower, a drone with a clipboard soul underlined her terminal ID.'];
+let DL_CLOSE={
   0:['End of cycle. The nest curtain drawn, the drone on his shelf, the station humming its enormous hum with nothing underneath it. Tonight.','Cycle filed. Sleep comes easy on days the numbers are honest.'],
   1:['End of cycle. Sparky kept one lens on the vent mouth until her breathing evened out.','Cycle filed, with a footnote of static.'],
   2:['End of cycle. The whispers were louder tonight. She slept with the wrench inside the blanket.','Cycle filed. Somewhere below decks, something else finished its accounting too.'],
@@ -1164,74 +1463,74 @@ function buildDayLog(k){
 /* ═══════════════ MOMENTS — instant reactions to what you just logged ═══════════════
    Ephemeral micro-scenes: play once at the moment of logging, never listed in the
    Logbook. Branch on type, amount, and journal content. Max one per branch per day. */
-const M_MEAL_FIRST=[
+let M_MEAL_FIRST=[
   ['narr','First rations of the cycle, logged and honest. Somewhere in the nest, a kettle that is really a coolant line pops twice, approvingly.'],
   ['koko','Fuel in. Okay, station. Let\'s see what you\'ve got today.'],
   ['narr','Sparky stamps the log with his little HONEST fanfare and pre-warms her socket wrench. It doesn\'t need pre-warming. It\'s a ritual.'],
 ];
-const M_MEAL_BIG=[
+let M_MEAL_BIG=[
   ['narr','A real meal — the kind dock crews eat before heavy shifts. Chen doesn\'t comment. Chen adds an extra dumpling, which is how Chen comments.'],
   ['koko','I am going to lift SO many crates today.'],
   ['narr','Sparky, tracking her chopsticks like a spectator sport, plays the tiny fanfare at half volume so the whole hall doesn\'t hear.'],
 ];
-const M_MEAL_SNACK=[
+let M_MEAL_SNACK=[
   ['narr','A pocket ration, eaten walking, like a goblin of the causeways. It counts. Barely, but it counts.'],
   ['koko','Snacks are just meals with commitment issues. Log it.'],
   ['narr','One skeptical click from the satchel. Logged, and judged.'],
 ];
-const M_MEAL_OVER=[
+let M_MEAL_OVER=[
   ['narr','That was... past the limit. Comfortably past. Uncomfortably, actually, from where Koko is now sitting, which is the floor of the nest, not moving.'],
   ['koko','Why. Why did I do that. Sparky, if the station gets attacked in the next hour, I die here. Tell Rook he can have my wrenches.'],
   ['narr','Sparky rolls a water pouch against her boot and plays, very softly, the descending womp-womp. The vents will be a squeeze tomorrow. The audit drones have taken note.'],
   ['koko','...worth it though. Slightly. Ask me again in an hour.'],
 ];
-const M_MOVE_LIGHT=[
+let M_MOVE_LIGHT=[
   ['narr','A short stint of movement — a stretch of causeway, a few crates, blood remembering it has places to be.'],
   ['koko','Not a workout. A down payment on a workout.'],
   ['narr','Sparky logs it without ceremony but keeps the file open, optimistically.'],
 ];
-const M_MOVE_GOOD=[
+let M_MOVE_GOOD=[
   ['narr','Proper work — the good ache settling into her shoulders, the kind that means the body was USED today.'],
   ['koko','Dock legs, don\'t fail me now.'],
   ['narr','From the shelf, an approving double-chime. Somewhere on deck 6, a pull-up bar remains unbent, but it\'s early days.'],
 ];
-const M_MOVE_HEAVY=[
+let M_MOVE_HEAVY=[
   ['narr','A heavy session — the kind that ends with forearms shaking and grease in places grease should not reach. Even the freight loaders nodded on her way past.'],
   ['koko','Everything hurts. Everything WORKS. These are different sentences and I mean both.'],
   ['narr','Sparky escorts her to the nest at low hover, dimming lights ahead of her like a tiny usher, and files the session under his rarest tag: MAGNIFICENT.'],
 ];
-const M_MOVE_GOAL=[
+let M_MOVE_GOAL=[
   ['narr','Exertion target met. On the telemetry, one ring closes with a soft mechanical certainty, like a lock deciding to trust you.'],
   ['koko','Goal. Met. Station, you may applaud.'],
   ['narr','The station does not applaud. Sparky covers for it with the full fanfare, wings half-spread, absolutely shameless.'],
 ];
-const M_MIND_ANXIETY=[
+let M_MIND_ANXIETY=[
   ['narr','The journal line goes into the log, and Sparky reads it the way he reads hull-breach telemetry: instantly, twice, wings tightening.'],
   ['narr','He initiates the protocol he built himself and never named: nest light down to ember, a slow four-count click... hold... four-count click — a breathing pace, wearing a metronome\'s clothes. One weighted leg rests on her knee.'],
   ['koko','I\'m fine. I\'m— okay. Not fine. Working on it. Four counts, yeah.'],
   ['narr','They sit inside the small circle of ember-light until her shoulders come down from around her ears. The station, for once, keeps its noises to itself. He stays until the file closes. He always stays.'],
 ];
-const M_MIND_DARK=[
+let M_MIND_DARK=[
   ['narr','A heavy eval, logged honestly — which is the bravest configuration of a bad day.'],
   ['narr','Sparky doesn\'t chirp. He settles on her shoulder, powers down everything but one warm lens, and becomes, deliberately, the weight of a hand.'],
   ['koko','...Thanks, bug. Tomorrow, right?'],
   ['narr','One soft chime. Tomorrow.'],
 ];
-const M_MIND_MID=[
+let M_MIND_MID=[
   ['narr','Eval logged: level. Not a good day, not a bad one — a held line. The station respects a held line; most of its bulkheads are exactly that.'],
   ['koko','Steady as she goes. That\'s the whole entry, Sparky. Some days that\'s the whole entry.'],
 ];
-const M_MIND_BRIGHT=[
+let M_MIND_BRIGHT=[
   ['narr','Eval logged: bright. Sparky triple-checks the reading, because optimism on this station is usually a sensor fault.'],
   ['koko','Nope. Real. Good day. Log it before the universe notices.'],
   ['narr','He logs it fast, seals the file, and does one small, unnecessary loop of the nest. Recorded forever. The universe can do nothing.'],
 ];
-const M_CARE_FULL=[
+let M_CARE_FULL=[
   ['narr','Teeth, face, the lavender soap. The full ritual, unrushed. In the cracked mirror: two Kokos, both clean, both ready.'],
   ['koko','Armor on. Come at me, station.'],
   ['narr','Sparky presents her hair clip like a squire presenting a sword. He has been waiting all morning to do this.'],
 ];
-const M_CARE_HALF=[
+let M_CARE_HALF=[
   ['narr','Half the ritual — better than none, less than the deal. The cracked mirror declines to comment.'],
   ['koko','I\'ll do the rest tonight. Sparky. I WILL.'],
   ['narr','One click. Provisionally logged. He keeps the soap in view, meaningfully.'],
@@ -1284,17 +1583,28 @@ function playMoment(title, scene){
    they feed the narrator and fire supportive events — never the signal. */
 function computeStrains(){
   let W=0, n=0,o=0,u=0,b=0,f=0, sleepSeen=false, heavyRun=0, maxHeavy=0;
+  const rhrVals=[], hrvVals=[];
+  for(let i=0;i<14;i++){
+    const d=i===0?today:loadDay(keyOffset(i));
+    if(d.restHR>0) rhrVals.push(d.restHR);
+    if(d.hrv>0) hrvVals.push(d.hrv);
+  }
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  const rhrAvg=avg(rhrVals), hrvAvg=avg(hrvVals);
+  const rhrEnough=rhrVals.length>=5, hrvEnough=hrvVals.length>=5;   // need a personal baseline
   for(let i=0;i<14;i++){
     const d=i===0?today:loadDay(keyOffset(i));
     const w=14-i; W+=w;
     const L=kcalLimit(d);
     const anxious=(Array.isArray(d.moments)&&d.moments.includes('THE PROTOCOL'))
       || /anxi|worri|scared|afraid|panic|nervous|stress|overwhelm/i.test(d.journal||'')
-      || (d.mood>0&&d.mood<=2);
+      || (d.mood>0&&d.mood<=2)
+      || (hrvEnough && d.hrv>0 && d.hrv < hrvAvg*0.8);      // HRV well below your baseline = strain
     if(anxious)n+=w;
     if(d.kcal>L*1.1)o+=w;
     if(d.kcal>0&&d.kcal<L*0.6)u+=w;
     if(d.sleepMin){ sleepSeen=true; if(d.sleepMin<360)b+=w; }
+    if(rhrEnough && d.restHR>0 && d.restHR > rhrAvg+5){ sleepSeen=true; b+=w; }   // resting HR up vs baseline = under-recovered
     if(effMove(d)>=60){ heavyRun++; maxHeavy=Math.max(maxHeavy,heavyRun); } else heavyRun=0;
     if(d.forecast!=null && d.forecast-achievedLvl(d)>0)f+=w;
   }
@@ -1303,31 +1613,31 @@ function computeStrains(){
   return {nerves:pct(n), over:pct(o), under:pct(u), burnout:pct(b), manifests:pct(f), sleepSeen};
 }
 function strainLevel(v){ return v>=55?2:(v>=25?1:0); }
-const S_NERVES=[
+let S_NERVES=[
   ['narr','The worry ledger crosses a line Sparky drew for himself weeks ago. Too many anxious days, too close together.'],
   ['narr','He escalates, his way: the protocol now runs preemptively at night cycle, unasked. The nest light goes to ember before she reaches for it. Four counts, hold, four counts.'],
   ['koko','You\'re keeping a file on me, bug.'],
   ['narr','Two soft chimes. Of course he is. It\'s his favorite file. He would like it to be thinner.'],
 ];
-const S_OVER=[
+let S_OVER=[
   ['narr','A pattern in the ration logs, days deep now. Nobody says the word. Chen simply starts building her usual bowl with more broth and fewer dumplings, unprompted, unremarked.'],
   ['koko','...Chen. Did my order change?'],
   ['other','[Chen] Orders drift. Currents drift. Eat your soup.'],
   ['narr','Sparky, under the counter, plays no tone at all — which for him is tact. The station takes care of its own, sideways.'],
 ];
-const S_UNDER=[
+let S_UNDER=[
   ['narr','The ration logs have been running thin for days, and the station has noticed the way stations notice: quietly, at the edges.'],
   ['narr','A wax-paper parcel waits at the vent mouth. Dumplings. Still warm. No note — there is never a note — but the fold in the paper is administrative-grade.'],
   ['koko','I\'m fine. I\'ve just been busy. Sparky, tell the vent I\'m FINE.'],
   ['narr','One click: message declined. He nudges the parcel closer with two legs and waits. He can wait all night. She eats.'],
 ];
-const S_BURN=[
+let S_BURN=[
   ['narr','The body\'s ledger is deep in the red — short nights, heavy shifts, no slack in the line. Sparky runs the numbers twice, then does something unprecedented: he closes the toolbox. And sits on it.'],
   ['koko','Bug. Move.'],
   ['narr','A long, level buzz. MANDATORY NOTHING, says the posture of a very small drone on a very locked toolbox. Tonight the station can fix itself.'],
   ['koko','...One evening. ONE. And you\'re off the toolbox tomorrow.'],
 ];
-const S_FALSE=[
+let S_FALSE=[
   ['narr','The forecast ledger and the exertion ledger have been telling different stories for days, and the gap has a shape the audit drones can see from orbit.'],
   ['narr','Sparky projects both ledgers on the nest wall, side by side, and says nothing. The numbers do the talking. The numbers are not kind.'],
   ['koko','Okay. OKAY. Tomorrow I file honest or I file Inactive. Take it down.'],
@@ -1352,7 +1662,7 @@ function checkStrainEvents(st){
 }
 
 /* ═══════════════ ACHIEVEMENTS ═══════════════ */
-const ACH=[
+let ACH=[
   {id:'first',   icon:'📡', name:'First Transmission', cond:'log anything once', test:s=>s.any},
   {id:'full1',   icon:'✅', name:'Perfect Cycle', cond:'all 3 goals in a day', test:s=>s.fullDays>=1},
   {id:'streak3', icon:'⚡', name:'Three in a Row', cond:'3-day streak', test:s=>s.best>=3},
@@ -1366,11 +1676,153 @@ const ACH=[
   {id:'journal18',icon:'💚', name:'Tuesday Person', cond:'18 journal entries', test:s=>s.jDays>=18},
 ];
 
-/* ═══════════════ TRACKER UPLINK (Fitbit) ═══════════════
-   OAuth implicit grant (same approach as QuestCut): token lives in the URL
-   fragment on return, then in localStorage. Sync fills fbMove/steps/sleepMin. */
+/* ═══════════════ TRACKER UPLINK — provider layer ═══════════════
+   Native (installed app) → Google Health Connect on-device API (Fitbit's successor).
+   Web (hosted PWA)        → Fitbit Web API (OAuth implicit), kept as a fallback.
+   Both providers write the SAME day fields the rest of the app reads:
+   fbMove (active minutes), steps, sleepMin. */
+function isNative(){ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }
+function hcPlugin(){ return (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.HealthConnect) || null; }
+function trackerMode(){ return (isNative() && hcPlugin()) ? 'healthconnect' : 'fitbit'; }
+
+/* write measured numbers into a day, mirroring the app's data model */
+function trackerApplyDay(k, m){
+  const d=loadDay(k);
+  if(m.activeMin!=null) d.fbMove=Math.round(m.activeMin);
+  if(m.steps!=null)     d.steps=Math.round(m.steps);
+  if(m.sleepMin!=null && m.sleepMin>0) d.sleepMin=Math.round(m.sleepMin);
+  if(m.restHR!=null && m.restHR>0) d.restHR=Math.round(m.restHR);
+  if(m.hrv!=null && m.hrv>0) d.hrv=Math.round(m.hrv);
+  if(m.burnKcal!=null && m.burnKcal>0) d.burnKcal=Math.round(m.burnKcal);
+  saveDay(k,d);
+}
+function trackerSummary(){
+  today=loadDay(todayKey());
+  return '⌚ synced — today: '+(today.fbMove||0)+' active min, '+(today.steps||0)+' steps'
+    +(today.sleepMin?(', '+(Math.round(today.sleepMin/6)/10)+'h sleep'):'');
+}
+
+/* ── dispatchers wired to the settings buttons + boot ── */
+function fbConnect(){ return trackerMode()==='healthconnect' ? hcConnect() : fbConnectFitbit(); }
+async function fbSync(force){ return trackerMode()==='healthconnect' ? hcSync(force) : fbSyncFitbit(force); }
+function fbDisconnect(){ return trackerMode()==='healthconnect' ? hcDisconnect() : fbDisconnectFitbit(); }
+function fbStatus(msg){ return trackerMode()==='healthconnect' ? hcStatus(msg) : fbStatusFitbit(msg); }
+
+/* ═══ Google Health Connect (native) ═══ */
+const HC_READ=['Steps','ExerciseSession','SleepSession','RestingHeartRate','HeartRateVariabilityRmssd','TotalCaloriesBurned'];
+const HC_ASLEEP_STAGES=[2,4,5,6];   // sleeping, light, deep, rem (exclude awake/out-of-bed)
+function hcLinked(){ try{ return !!JSON.parse(localStorage.getItem('ksd_hc')||'null'); }catch(e){ return false; } }
+function hcAvail(a){ return a && (a.availability||a); }
+async function hcConnect(){
+  const p=hcPlugin(); if(!p){ showToast('Health Connect only works in the installed app'); return; }
+  try{
+    const status=hcAvail(await p.checkAvailability());
+    if(status==='NotInstalled'){ showToast('Install “Health Connect” from the Play Store first'); if(p.openHealthConnectSetting) try{ await p.openHealthConnectSetting(); }catch(e){} return; }
+    if(status==='NotSupported'){ showToast('Health Connect isn’t supported on this device'); return; }
+    const res=await p.requestHealthPermissions({ read:HC_READ, write:[] });
+    if(res && res.hasAllPermissions===false && (!res.grantedPermissions || !res.grantedPermissions.length)){
+      hcStatus('permission denied — tap connect and allow Steps, Exercise and Sleep'); return;
+    }
+    localStorage.setItem('ksd_hc', JSON.stringify({linked:true, ts:Date.now()}));
+    showToast('⌚ Health Connect linked'); fbSync(true);
+  }catch(e){ hcStatus('connect failed ('+(e&&e.message||e)+')'); }
+}
+function hcDisconnect(){ localStorage.removeItem('ksd_hc'); delete meta.fbLast; saveMeta(meta); fbStatus(); showToast('Tracker unlinked'); }
+async function hcRead(type,k){
+  const p=hcPlugin(); if(!p) return [];
+  const start=new Date(k+'T00:00:00'), end=new Date(k+'T23:59:59.999');
+  const res=await p.readRecords({ type, timeRangeFilter:{ type:'between', startTime:start.toISOString(), endTime:end.toISOString() } });
+  return (res && res.records) || [];
+}
+/* Sleep spans midnight, so query a noon(prev day)→noon(day k) window and attribute
+   the night to the day you woke on. This reliably catches overnight sessions that a
+   same-day 00:00–23:59 window misses. */
+async function hcReadSleep(k){
+  const p=hcPlugin(); if(!p) return [];
+  const end=new Date(k+'T12:00:00');
+  const start=new Date(end.getTime()-24*3600e3);   // previous day 12:00
+  const res=await p.readRecords({ type:'SleepSession', timeRangeFilter:{ type:'between', startTime:start.toISOString(), endTime:end.toISOString() } });
+  return (res && res.records) || [];
+}
+/* Optional: import the most recent period-start date from Health Connect (e.g. if a
+   cycle-tracking app writes MenstruationPeriod there). Best-effort — many apps (incl.
+   Fitbit) don't share cycle data to Health Connect, so this may find nothing. */
+const HC_CYCLE_READ=['MenstruationPeriod'];
+async function hcCycleImport(interactive){
+  const p=hcPlugin();
+  if(!p){ if(interactive) showToast('Health Connect only works in the installed app'); return false; }
+  try{
+    const perm=await p.requestHealthPermissions({ read:HC_CYCLE_READ, write:[] });
+    if(perm && perm.hasAllPermissions===false && (!perm.grantedPermissions || !perm.grantedPermissions.some(x=>/menstru/i.test(x)))){
+      if(interactive) updateCycleStatus('period access not granted in Health Connect');
+      return false;
+    }
+    const end=new Date(); const start=new Date(end.getTime()-180*24*3600e3);   // look back ~6 months
+    const res=await p.readRecords({ type:'MenstruationPeriod', timeRangeFilter:{ type:'between', startTime:start.toISOString(), endTime:end.toISOString() } });
+    const recs=(res && res.records) || [];
+    if(!recs.length){ if(interactive) updateCycleStatus('no period data in Health Connect (your source app may not share it — log manually below)'); return false; }
+    // most recent period by startTime
+    recs.sort((a,b)=> new Date(b.startTime) - new Date(a.startTime));
+    const d=new Date(recs[0].startTime);
+    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    meta.cycleStart=k; saveMeta(meta);
+    const inp=document.getElementById('cfg-cyclestart'); if(inp) inp.value=k;
+    updateCycleStatus(); render();
+    if(interactive) showToast('🩸 Imported period start from Health Connect — '+k);
+    return true;
+  }catch(e){ if(interactive) updateCycleStatus('import failed ('+(e&&e.message||e)+')'); return false; }
+}
+function spanMin(s,e){ const a=new Date(s).getTime(), b=new Date(e).getTime(); return (b>a)?(b-a)/60000:0; }
+function sleepAsleepMin(rec){
+  const st=rec.stages;
+  if(Array.isArray(st) && st.length)
+    return st.filter(x=>HC_ASLEEP_STAGES.includes(x.stage)).reduce((a,x)=>a+spanMin(x.startTime,x.endTime),0)
+        || spanMin(rec.startTime, rec.endTime);   // no scored stages → fall back to session length
+  return spanMin(rec.startTime, rec.endTime);
+}
+async function hcSync(force){
+  if(!hcLinked() || !hcPlugin()) return;
+  if(!force && meta.fbLast && Date.now()-meta.fbLast<3600e3) return;
+  meta.fbLast=Date.now(); saveMeta(meta);
+  try{
+    let sleepRecordsToday=0;
+    for(const i of [0,1]){                       // today + yesterday (backfill)
+      const k=keyOffset(i);
+      const steps=(await hcRead('Steps',k)).reduce((a,r)=>a+(r.count||0),0);
+      const activeMin=(await hcRead('ExerciseSession',k)).reduce((a,r)=>a+spanMin(r.startTime,r.endTime),0);
+      const sleepRecs=await hcReadSleep(k);
+      const sleepMin=sleepRecs.reduce((a,r)=>a+sleepAsleepMin(r),0);
+      if(i===0) sleepRecordsToday=sleepRecs.length;
+      // recovery + energy signals
+      const rhr=await hcRead('RestingHeartRate',k);
+      const restHR=rhr.length ? rhr[rhr.length-1].beatsPerMinute : null;
+      const hrvR=await hcRead('HeartRateVariabilityRmssd',k);
+      const hrv=hrvR.length ? hrvR[hrvR.length-1].heartRateVariabilityMillis : null;
+      const burnKcal=(await hcRead('TotalCaloriesBurned',k)).reduce((a,r)=>a+((r.energy&&r.energy.value)||0),0);
+      trackerApplyDay(k, {steps, activeMin, sleepMin, restHR, hrv, burnKcal});
+    }
+    today=loadDay(todayKey());
+    // best-effort cycle import (only if tracking is on and permission is available)
+    if(meta.cfg.cycleTrack){ try{ await hcCycleImport(false); }catch(e){} }
+    // diagnostic-friendly status: if sleep came back empty, say so (usually a permission gap)
+    let msg=trackerSummary();
+    if(!(today.sleepMin>0)){
+      msg += sleepRecordsToday===0
+        ? ' · no sleep records (grant Sleep in Health Connect, or your source app isn\'t writing sleep)'
+        : ' · sleep found but unscored';
+    }
+    hcStatus(msg); render();
+  }catch(e){ hcStatus('Health Connect sync failed ('+(e&&e.message||e)+')'); }
+}
+function hcStatus(msg){
+  const el=document.getElementById('fb-status'); if(!el) return;
+  if(msg){ el.textContent=msg; return; }
+  el.textContent = hcLinked() ? '⌚ Health Connect linked — syncs on open, hourly' : 'not linked — tap connect to allow Steps, Exercise and Sleep';
+}
+
+/* ═══ Fitbit Web API (browser/PWA fallback) ═══ */
 function fbToken(){ try{ return JSON.parse(localStorage.getItem('ksd_fitbit')); }catch(e){ return null; } }
-function fbConnect(){
+function fbConnectFitbit(){
   const id=(meta.cfg.fbId||'').trim();
   if(!id){ showToast('Paste your Fitbit Client ID first'); return; }
   if(!location.protocol.startsWith('http')){ showToast('Connect from the hosted app, not a local file'); return; }
@@ -1381,6 +1833,7 @@ function fbConnect(){
     +'&scope=activity%20sleep&expires_in=31536000';
 }
 function fbExtract(){
+  if(isNative()) return;                          // native uses Health Connect, no OAuth hash
   if(!location.hash.includes('access_token=')) return;
   const p=new URLSearchParams(location.hash.slice(1));
   const t=p.get('access_token');
@@ -1390,8 +1843,8 @@ function fbExtract(){
     setTimeout(()=>showToast('⌚ Tracker uplink connected'), 800);
   }
 }
-function fbDisconnect(){ localStorage.removeItem('ksd_fitbit'); delete meta.fbLast; saveMeta(meta); fbStatus(); showToast('Tracker disconnected'); }
-function fbStatus(msg){
+function fbDisconnectFitbit(){ localStorage.removeItem('ksd_fitbit'); delete meta.fbLast; saveMeta(meta); fbStatus(); showToast('Tracker disconnected'); }
+function fbStatusFitbit(msg){
   const el=document.getElementById('fb-status'); if(!el) return;
   if(msg){ el.textContent=msg; return; }
   el.textContent = fbToken() ? '⌚ connected — syncs on open, once an hour' : (meta.cfg.fbId?'key stored — tap connect to authorize':'');
@@ -1403,7 +1856,7 @@ async function fbFetch(path){
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
-async function fbSync(force){
+async function fbSyncFitbit(force){
   if(!fbToken() || !navigator.onLine) return;
   if(!force && meta.fbLast && Date.now()-meta.fbLast<3600e3) return;
   meta.fbLast=Date.now(); saveMeta(meta);
@@ -1412,27 +1865,88 @@ async function fbSync(force){
       const k=keyOffset(i);
       const act=await fbFetch('/1/user/-/activities/date/'+k+'.json');
       const slp=await fbFetch('/1.2/user/-/sleep/date/'+k+'.json');
-      const d=loadDay(k);
-      d.fbMove=(act.summary.fairlyActiveMinutes||0)+(act.summary.veryActiveMinutes||0);
-      d.steps=act.summary.steps||0;
-      if(slp.summary && slp.summary.totalMinutesAsleep>0) d.sleepMin=slp.summary.totalMinutesAsleep;
-      saveDay(k,d);
+      trackerApplyDay(k, {
+        activeMin:(act.summary.fairlyActiveMinutes||0)+(act.summary.veryActiveMinutes||0),
+        steps:act.summary.steps||0,
+        sleepMin:(slp.summary && slp.summary.totalMinutesAsleep>0)?slp.summary.totalMinutesAsleep:null
+      });
     }
-    today=loadDay(todayKey());
-    fbStatus('⌚ synced — today: '+(today.fbMove||0)+' active min, '+(today.steps||0)+' steps'
-      +(today.sleepMin?(', '+(Math.round(today.sleepMin/6)/10)+'h sleep'):''));
-    render();
+    fbStatus(trackerSummary()); render();
   }catch(e){ fbStatus('tracker sync failed ('+e.message+')'+(e.message==='token expired'?' — reconnect':'')); }
+}
+
+/* ── boot: pick the provider, set the settings copy, then sync ── */
+function trackerInit(){
+  if(trackerMode()==='healthconnect'){
+    const lab=document.getElementById('tracker-label'); const sub=document.getElementById('tracker-sub');
+    const idrow=document.getElementById('cfg-fbid-row');
+    if(lab) lab.textContent='Tracker uplink — Health Connect';
+    if(sub) sub.textContent='links to Google Health Connect on this device. tap connect and allow Steps, Exercise and Sleep — no account or key needed. active minutes fill the exertion ring; sleep powers the strain ledger.';
+    if(idrow) idrow.style.display='none';
+  }
+  fbExtract(); fbStatus(); fbSync();
+}
+
+/* ═══════════════ LOCAL NOTIFICATIONS (native only) ═══════════════
+   In-theme daily reminders to log goals. No-ops gracefully on the web/PWA,
+   where the plugin is absent. Content is themed to the active perspective. */
+function notifPlugin(){ return (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications) || null; }
+function notifSupported(){ return isNative() && !!notifPlugin(); }
+function _hm(str, dh, dm){
+  const m=/^(\d{1,2}):(\d{2})$/.exec(str||''); 
+  return m ? {hour:+m[1], minute:+m[2]} : {hour:dh, minute:dm};
+}
+function notifLines(){
+  const rook = trackerMode()==='healthconnect' || (localStorage.getItem('ksd_pov')==='rook');
+  return rook ? {
+    am:  {title:'KSD // SIGNAL', body:'File today\'s haul forecast, captain. The Peregrine\'s waiting.'},
+    mid: {title:'KSD // SIGNAL', body:'MAVIS⟩ rations and exertion unlogged. the signal\'s starting to drift.'},
+    pm:  {title:'KSD // SIGNAL', body:'Close the cycle — ship\'s log and maintenance keep the signal alive tonight.'}
+  } : {
+    am:  {title:'KSD // SIGNAL', body:'File today\'s shift forecast. The station is waiting, Koko.'},
+    mid: {title:'KSD // SIGNAL', body:'SPARKY⟩ rations and exertion still unlogged. the drift is starting.'},
+    pm:  {title:'KSD // SIGNAL', body:'Close the cycle — psych eval and care keep the signal alive tonight.'}
+  };
+}
+async function notifReschedule(){
+  const p=notifPlugin(); if(!p) return;
+  try{
+    // clear our slots first
+    const ids=[8801,8802,8803];
+    try{ await p.cancel({notifications: ids.map(id=>({id}))}); }catch(e){}
+    if(!meta.cfg.remind) return;
+    const perm=await p.requestPermissions();
+    if(perm && perm.display && perm.display!=='granted'){ notifStatus('permission denied — allow notifications in system settings'); return; }
+    const L=notifLines();
+    const mk=(id,slot,t,d)=>{ const hm=_hm(t, d.hour, d.minute); return {id, title:slot.title, body:slot.body, schedule:{on:{hour:hm.hour, minute:hm.minute}, repeats:true}, smallIcon:'ic_launcher'}; };
+    await p.schedule({ notifications:[
+      mk(8801, L.am,  meta.cfg.remindAM,  {hour:9,minute:0}),
+      mk(8802, L.mid, meta.cfg.remindMid, {hour:15,minute:0}),
+      mk(8803, L.pm,  meta.cfg.remindPM,  {hour:20,minute:0})
+    ]});
+    notifStatus('⌁ reminders armed — 3 daily pings');
+  }catch(e){ notifStatus('reminders failed ('+(e&&e.message||e)+')'); }
+}
+function notifStatus(msg){ const el=document.getElementById('remind-sub'); if(el && msg) el.textContent=msg; }
+function notifInit(){
+  const timesRow=document.getElementById('remind-times');
+  if(timesRow) timesRow.style.display = meta.cfg.remind ? 'flex' : 'none';
+  const sub=document.getElementById('remind-sub');
+  if(sub && !notifSupported() && !isNative()) sub.textContent='station pings to log your goals (works in the installed app)';
+  if(notifSupported()) notifReschedule();
 }
 
 /* ═══════════════ NARRATOR UPLINK (Gemini free tier) ═══════════════
    One JSON bundle per day (Sparky lines per tier, directive card, whispers),
    plus one-time scene personalization at unlock. Hand-written pools are the
    permanent fallback — no key / offline / bad response = app works as before. */
-const AI_MODEL='gemini-flash-latest';
+const AI_MODEL='gemini-3.1-flash-lite';            // free-tier text model: 15 RPM / 500 RPD (vs 5/20 on 2.5 Flash)
+const AI_MODEL_FALLBACK='gemini-flash-latest';     // used automatically if the primary model ID is rejected (404/not-found)
+const AI_MODEL_LITE='gemini-3.1-flash-lite';       // food estimator uses the same roomy model
+function activeModel(){ return (meta.cfg && meta.cfg.aiModel && meta.cfg.aiModel.trim()) || AI_MODEL; }
 const TIER_KEYS=['stable','uneasy','degraded','critical'];
 let aiBusy=false;
-const STORY_BIBLE=`You are the narrator engine of "KSD // Signal", a neo-noir horror sci-fi health app set on the Keppler Space Dock, a vast station of traders, smugglers and stranger things. The player IS Koko (Korrine Kolczynski), 19, a self-taught engineer genius, stowaway, grease-stained, crawls the vents. Cast: SPARKY — her loyal drone, spider-legged with folding beetle wings; he NEVER speaks, only beeps/chimes/wing-flutters (narrate his sounds) or short typed text transmissions prefixed "SPARKY⟩". HENRY ROOK — grumpy 40s captain of the Peregrine, docked at bay twelve; slow-burn friendship; Koko spies on him and pilfers his hold. KATIE WAGNER — station administrator, human-fairy hybrid, kind but firm, feeds the poor decks, posts official directives. GARY — young bounty hunter, docks Tuesdays, boastful in public, quietly homesick and shaken when alone; slow mutual crush with Koko. Horror: creatures escape docked ships' cargo holds; container 88; the thing that mimics voices; the station itself seems to notice things. Rules: address the player as "you" (you are Koko); tone is dry, wry, tender, with creeping dread; horror whispers are lowercase and come ONLY from "SPARKY⟩" transmissions or the impersonal station system; no emoji; keep every line under 200 characters unless asked otherwise; never break character; PG-13 dread, no gore.`;
+let STORY_BIBLE=`You are the narrator engine of "KSD // Signal", a neo-noir horror sci-fi health app set on the Keppler Space Dock, a vast station of traders, smugglers and stranger things. The player IS Koko (Korrine Kolczynski), 19, a self-taught engineer genius, stowaway, grease-stained, crawls the vents. Cast: SPARKY — her loyal drone, spider-legged with folding beetle wings; he NEVER speaks, only beeps/chimes/wing-flutters (narrate his sounds) or short typed text transmissions prefixed "SPARKY⟩". HENRY ROOK — grumpy 40s captain of the Peregrine, docked at bay twelve; slow-burn friendship; Koko spies on him and pilfers his hold. KATIE WAGNER — station administrator, human-fairy hybrid, kind but firm, feeds the poor decks, posts official directives. GARY — young bounty hunter, docks Tuesdays, boastful in public, quietly homesick and shaken when alone; slow mutual crush with Koko. Horror: creatures escape docked ships' cargo holds; container 88; the thing that mimics voices; the station itself seems to notice things. Rules: address the player as "you" (you are Koko); tone is dry, wry, tender, with creeping dread; horror whispers are lowercase and come ONLY from "SPARKY⟩" transmissions or the impersonal station system; no emoji; keep every line under 200 characters unless asked otherwise; never break character; PG-13 dread, no gore.`;
 function loadBundle(){ try{ return JSON.parse(localStorage.getItem('ksd_ai_'+todayKey())); }catch(e){ return null; } }
 /* ── narrator memory: chronicle (raw recent days) + saga (AI-compacted past) + canon (scene ledger) ── */
 function chronTitle(id){ const c=CHAPTERS.find(x=>x.id===id)||GARY_EVENTS.find(x=>x.id===id); return c?c.title:id; }
@@ -1494,20 +2008,115 @@ function aiMemory(){
   return m;
 }
 function aiReady(){ return !!(meta.cfg.aiKey) && meta.booted && navigator.onLine; }
-async function aiCall(prompt){
-  const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+AI_MODEL+':generateContent?key='+encodeURIComponent(meta.cfg.aiKey),{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      system_instruction:{parts:[{text:STORY_BIBLE}]},
-      contents:[{parts:[{text:prompt}]}],
-      generationConfig:{responseMimeType:'application/json', temperature:1.0}
-    })
-  });
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const j=await res.json();
-  const t=j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts[0] && j.candidates[0].content.parts[0].text;
-  if(!t) throw new Error('empty response');
-  return JSON.parse(t);
+/* ── AI request pipeline: serialized queue (stays under RPM) + 429 backoff/retry ──
+   Every Gemini call funnels through aiRequest → the queue guarantees a minimum gap
+   between requests, and 429s are retried honouring the server's RetryInfo delay. */
+const AI_MIN_GAP_MS=4200;      // ~14 req/min — safely under the 15 RPM limit of gemini-3.1-flash-lite
+const AI_MAX_RETRIES=3;
+let _aiChain=Promise.resolve();
+let _aiLastAt=0;
+let _aiLastModel='';   // the model ID that actually answered the most recent call (reveals fallbacks)
+const AI_TIMEOUT_MS=25000;   // hard cap so a hung request never spins forever
+function _sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+function _retryDelayMs(j, attempt){
+  // honour google's RetryInfo if present, else exponential backoff
+  try{
+    const details=j && j.error && j.error.details || [];
+    for(const d of details){
+      if(d['@type'] && d['@type'].includes('RetryInfo') && d.retryDelay){
+        const s=parseFloat(String(d.retryDelay).replace('s',''));
+        if(!isNaN(s)) return Math.min(60000, s*1000+500);
+      }
+    }
+  }catch(e){}
+  return Math.min(60000, 2000*Math.pow(2, attempt));   // 2s,4s,8s...
+}
+async function _aiFetch(model, sysText, prompt, temp){
+  let usedFallback=false;
+  for(let attempt=0; ; attempt++){
+    // pace: never fire two calls closer than AI_MIN_GAP_MS
+    const wait=AI_MIN_GAP_MS-(Date.now()-_aiLastAt);
+    if(wait>0) await _sleep(wait);
+    _aiLastAt=Date.now();
+    const ctrl=new AbortController();
+    const to=setTimeout(()=>ctrl.abort(), AI_TIMEOUT_MS);
+    let res;
+    try{
+      res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(meta.cfg.aiKey),{
+        method:'POST', headers:{'Content-Type':'application/json'}, signal:ctrl.signal,
+        body:JSON.stringify({
+          system_instruction:{parts:[{text:sysText||STORY_BIBLE}]},
+          contents:[{parts:[{text:prompt}]}],
+          generationConfig:{responseMimeType:'application/json', temperature:(temp!=null?temp:0.3)}
+        })
+      });
+    }catch(err){
+      clearTimeout(to);
+      if(err && err.name==='AbortError'){
+        if(attempt<AI_MAX_RETRIES){ continue; }
+        throw new Error('timed out — network slow or unreachable');
+      }
+      if(attempt<AI_MAX_RETRIES){ await _sleep(1500); continue; }
+      throw new Error('network error — check your connection');
+    }
+    clearTimeout(to);
+    // unknown/rejected model → fall back once to a known-good model ID
+    if((res.status===404 || res.status===400) && !usedFallback && model!==AI_MODEL_FALLBACK){
+      usedFallback=true; model=AI_MODEL_FALLBACK; attempt--; continue;
+    }
+    if(res.status===429 && attempt<AI_MAX_RETRIES){
+      let j=null; try{ j=await res.json(); }catch(e){}
+      await _sleep(_retryDelayMs(j, attempt));
+      continue;
+    }
+    if(!res.ok) throw new Error(res.status===429?'rate limited — try again in a minute':('HTTP '+res.status));
+    const j=await res.json();
+    const t=j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts[0] && j.candidates[0].content.parts[0].text;
+    if(!t) throw new Error('empty response');
+    _aiLastModel=model;
+    return JSON.parse(t);
+  }
+}
+function aiRequest(opts){
+  // chain onto the queue so calls run one-at-a-time, in order
+  const run=()=>_aiFetch(opts.model||activeModel(), opts.sys, opts.prompt, opts.temp);
+  // priority calls (the uplink test) jump the queue so they aren't stuck behind narration
+  if(opts.jump){ _aiLastAt=0; return run(); }
+  const p=_aiChain.then(run, run);
+  _aiChain=p.then(()=>{}, ()=>{});   // keep the chain alive regardless of success/failure
+  return p;
+}
+function aiCall(prompt){ return aiRequest({model:activeModel(), sys:STORY_BIBLE, prompt:prompt, temp:1.0}); }
+/* Nutrition estimator — factual system prompt, low temperature, same roomy model. */
+function aiCallSys(prompt, sysText, temp, model){ return aiRequest({model:model||activeModel(), sys:sysText||STORY_BIBLE, prompt:prompt, temp:(temp!=null?temp:0.3)}); }
+async function estimateFood(){
+  const q=(document.getElementById('food-ai-input').value||'').trim();
+  const out=document.getElementById('food-ai-out');
+  if(!q){ showToast('Describe what you ate first'); return; }
+  if(!aiReady()){
+    out.innerHTML = meta.cfg.aiKey
+      ? '<span style="color:var(--amber)">Offline — enter kcal manually.</span>'
+      : '<span style="color:var(--amber)">Add a free Gemini key in ⚙ System to use AI estimates.</span>';
+    return;
+  }
+  out.textContent='◈ estimating…';
+  try{
+    const b=await aiCallSys(
+      'Estimate the calories for this food a person ate: "'+q+'". '
+      +'Make reasonable assumptions for anything unspecified (cooking method, portion size, brand) and state them briefly. '
+      +'Return EXACTLY this JSON: {"items":[{"name":"short label including any assumption, e.g. 2 eggs (boiled)","kcal":140}],"total":190,"note":"one short friendly line stating the key assumption, max 14 words"}.',
+      'You are a concise, practical nutrition estimator. Give realistic average kcal for common foods and typical portions. Always return valid JSON only. Never refuse or moralise; if the description is vague, assume the most common preparation and portion and state it in the note.',
+      0.2,
+      AI_MODEL_LITE
+    );
+    if(!b || !Array.isArray(b.items) || !b.items.length || typeof b.total!=='number') throw new Error('bad shape');
+    const rows=b.items.map(it=>'· '+String(it.name)+' — '+Math.round(it.kcal)+' kcal').join('<br>');
+    out.innerHTML=rows
+      +'<br><b style="color:var(--teal)">≈ '+Math.round(b.total)+' kcal total</b>'
+      +(b.note?('<br><span style="color:var(--text-dim)">'+String(b.note)+'</span>'):'')
+      +'<br><span style="color:var(--text-dim);font-size:11px;">(estimate — edit the number below if needed)</span>';
+    document.getElementById('log-kcal-input').value=Math.round(b.total);
+  }catch(e){ out.innerHTML='<span style="color:var(--danger)">Estimate failed — enter kcal manually.</span>'; }
 }
 function aiContext(s, sig){
   const y=loadDay(keyOffset(1));
@@ -1517,16 +2126,25 @@ function aiContext(s, sig){
     +'TODAY ON THE STATION — signal integrity: '+sig+'% ('+TIER_INFO[signalTier(sig)].label+'). Streak: '+s.streak+' days. '
     +'Yesterday: eating goal '+(goalKcal(y)?'met':'missed')+', exercise '+(goalMove(y)?'met':'missed')+', psych eval '+(goalMind(y)?'done':'skipped')+'. '
     +'Today so far: '+today.kcal+' kcal, '+today.move+' min exertion, psych eval '+(today.mood>0?'done':'not yet')+'. '
-    +(Array.isArray(today.moments)&&today.moments.length?('Moments Koko already lived today (small scenes that happened — reference them where natural): '+today.moments.join(', ')+'. '):'')
+    +(Array.isArray(today.moments)&&today.moments.length?(LBL.AI.momentsIntro+today.moments.join(', ')+'. '):'')
     +(function(){ const st=lastStrains||computeStrains(); const L=v=>['low','elevated','HIGH'][strainLevel(v)];
       return 'Strain ledger (14-day rolling — chronic patterns; respond with care, never shame): nerves '+L(st.nerves)
         +', overeating '+L(st.over)+', undereating '+L(st.under)
         +', burnout '+(st.sleepSeen?L(st.burnout):'unknown (no sleep data)')
         +', forecast honesty '+L(st.manifests)
-        +(today.sleepMin?('. Last night\'s sleep: '+(Math.round(today.sleepMin/6)/10)+'h'):'')+'. '; })()
-    +'Rook '+(s.rookDays>0?'has noticed things going missing from his hold and is suspicious':'has no idea Koko watches him from the vents and pilfers his cargo')+'. '
+        +(today.sleepMin?('. Last night\'s sleep: '+(Math.round(today.sleepMin/6)/10)+'h'):'')
+        +((today.restHR>0||today.hrv>0)?('. Recovery signals — '+(today.restHR>0?('resting heart rate '+today.restHR+'bpm'):'')+(today.restHR>0&&today.hrv>0?', ':'')+(today.hrv>0?('HRV '+today.hrv+'ms'):'')+' (higher resting HR or lower HRV can mean the body is tired/stressed — respond with care, never alarm)'):'')+'. '; })()
+    +(s.rookDays>0?LBL.AI.relationSus:LBL.AI.relationUnobs)
     +'Gary\'s cutter is '+(s.garyDocked?'docked at bay nine':'away on a skip-trace')+'. Journal days: '+s.jDays+'. '
-    +(j?('Koko\'s latest journal line (weave it in subtly where fitting): "'+j.slice(0,200)+'". '):'')
+    +(j?(LBL.AI.journalIntro+'"'+j.slice(0,200)+'". '):'')
+    +(function(){ const c=(typeof cyclePhase==='function')?cyclePhase():null;
+      if(!c) return '';
+      // private tone guidance only — never state the biological cause in-world; modulate warmth
+      if(c.name==='Late luteal') return 'PRIVATE TONE NOTE (do not mention or explain the cause): the player is in a naturally low-energy, tender phase today; be noticeably gentler and kinder, lower any pressure, and treat lighter days as completely okay. ';
+      if(c.name==='Menstrual') return 'PRIVATE TONE NOTE (do not mention or explain the cause): the player is in a low-energy recovery phase today; keep the tone soft and restful, no pushing, rest is a win. ';
+      if(c.name==='Ovulation'||c.name==='Follicular') return 'PRIVATE TONE NOTE (do not mention the cause): the player is likely higher-energy today; a slightly brighter, more encouraging tone fits. ';
+      return '';
+    })()
     +'The deck card today should be in this voice/register: "'+slot.label+'".';
 }
 async function generateBundle(s, sig){
@@ -1536,9 +2154,9 @@ async function generateBundle(s, sig){
     const b=await aiCall(aiContext(s,sig)+'\n\nWrite today\'s ambient content. Return EXACTLY this JSON shape: '
       +'{"sparky":{"stable":[3 strings],"uneasy":[3 strings],"degraded":[3 strings],"critical":[3 strings]},'
       +'"directive":{"label":"short ▸-prefixed card header matching the requested voice","text":"the card body, 1-2 sentences"},'
-      +'"whispers":[5 lowercase horror lines, each either a SPARKY⟩ transmission or impersonal station-system text],'
-      +'"daylog":[4-7 ["speaker","text"] pairs — a closing account of YESTERDAY reacting to exactly what the player did and did not do (eating, exercise, psych eval, care, audit honesty); speakers from: narr, koko; quote the journal if one exists]}. '
-      +'Sparky arrays are third-person narrations of his beeps/behavior reacting to that signal tier and to the player\'s actual goals above. '
+      +'"whispers":[5 lowercase horror lines, '+LBL.AI.whisperSrc+'],'
+      +'"daylog":[4-7 ["speaker","text"] pairs — a closing account of YESTERDAY reacting to exactly what the player did and did not do (eating, exercise, psych eval, care, audit honesty); speakers from: '+LBL.AI.daylogSpeakers+'; quote the journal if one exists]}. '
+      +LBL.AI.companionArrays
       +'If YOUR OWN RECENT NARRATION opened a thread — something Rook noticed, a directive Katie issued, a sound in the walls — continue it or pay it off today where it fits naturally. Threads may span days.');
     if(b && b.sparky && TIER_KEYS.every(k=>Array.isArray(b.sparky[k])&&b.sparky[k].length)){
       localStorage.setItem('ksd_ai_'+todayKey(), JSON.stringify(b));
@@ -1547,7 +2165,7 @@ async function generateBundle(s, sig){
       if(Array.isArray(b.daylog) && b.daylog.length>=3 && b.daylog.every(l=>Array.isArray(l)&&l.length===2&&typeof l[1]==='string')){
         const yk2=keyOffset(1);
         if(localStorage.getItem('ksd_day_'+yk2))
-          localStorage.setItem('ksd_daylog_'+yk2, JSON.stringify(b.daylog.map(l=>[['narr','koko'].includes(l[0])?l[0]:'narr', l[1]])));
+          localStorage.setItem('ksd_daylog_'+yk2, JSON.stringify(b.daylog.map(l=>[LBL.AI.daylogAllowed.includes(l[0])?l[0]:'narr', l[1]])));
       }
       render();
       maybeCompactSaga(buildChronicle());   // fold old days into long-term memory when due
@@ -1562,13 +2180,14 @@ async function genScene(c){
   if(!aiReady() || meta.read.includes(c.id) || localStorage.getItem('ksd_scene_'+c.id)) return;
   try{
     const s=stats();
-    const b=await aiCall('Here is a canon scene from Koko\'s logbook as [speaker, text] pairs: '+JSON.stringify(c.scene)
+    const b=await aiCall('Here is a canon scene from '+LBL.AI.logbookOwner+'\'s logbook as [speaker, text] pairs: '+JSON.stringify(c.scene)
       +'\n\nPlayer context: '+aiContext(s, computeSignal())
-      +'\n\nRewrite this scene keeping every story beat, character voice and outcome, but weave in 1-3 subtle references to the player context and past memory (their goals, signal, journal, earlier scenes). Same length or slightly longer. Speakers must be from: '+VN_SPEAKERS.join(', ')
-      +'. Sparky never gets a speaker slot — narrate him via "narr". Return EXACTLY: {"scene":[["speaker","text"],...], "summary":"one sentence recording what canonically happened, for future memory"}');
+      +'\n\nRewrite this scene keeping every story beat, character voice and outcome, but weave in 1-3 subtle references to the player context and past memory (their goals, signal, journal, earlier scenes). Same length or slightly longer. Speakers must be from: '+(LBL.AI.sceneSpeakers||VN_SPEAKERS).join(', ')
+      +'. '+LBL.AI.sceneCompanionNote+' Return EXACTLY: {"scene":[["speaker","text"],...], "summary":"one sentence recording what canonically happened, for future memory"}');
     const sc=b && b.scene;
+    const okSpeakers=LBL.AI.sceneSpeakers||VN_SPEAKERS;
     if(Array.isArray(sc) && sc.length>=4 && sc.every(l=>Array.isArray(l)&&l.length===2&&typeof l[1]==='string')){
-      const clean=sc.map(l=>[VN_SPEAKERS.includes(l[0])?l[0]:'narr', l[1]]);
+      const clean=sc.map(l=>[okSpeakers.includes(l[0])?l[0]:'narr', l[1]]);
       localStorage.setItem('ksd_scene_'+c.id, JSON.stringify(clean));
       if(b.summary){
         const canon=loadCanon();
@@ -1580,15 +2199,20 @@ async function genScene(c){
 }
 async function testAI(){
   if(!meta.cfg.aiKey){ showToast('Paste a key first'); return; }
-  document.getElementById('ai-status').textContent='testing uplink...';
+  document.getElementById('ai-status').textContent='testing uplink…';
   try{
-    await aiCall('Reply with exactly {"ok":true}');
-    document.getElementById('ai-status').textContent='◈ UPLINK CONFIRMED — narration goes dynamic from tomorrow\'s cycle (or purge today\'s bundle by reloading)';
-    showToast('◈ Narrator uplink confirmed');
+    // jump the queue so the test isn't stuck behind narration; report the model that answered
+    await aiRequest({model:activeModel(), sys:'Return only JSON.', prompt:'Reply with exactly {"ok":true}', temp:0, jump:true});
+    const m=_aiLastModel||activeModel();
+    const fellBack=(m===AI_MODEL_FALLBACK && activeModel()!==AI_MODEL_FALLBACK);
+    document.getElementById('ai-status').textContent = fellBack
+      ? ('◈ UPLINK OK — but "'+activeModel()+'" was rejected; using fallback "'+m+'". Set a valid model id above.')
+      : ('◈ UPLINK CONFIRMED — using '+m+'. Narration goes dynamic next cycle.');
+    showToast(fellBack?'◈ Uplink OK (on fallback model)':'◈ Narrator uplink confirmed');
     localStorage.removeItem('ksd_ai_'+todayKey());
     render();
   }catch(e){
-    document.getElementById('ai-status').textContent='uplink failed: '+e.message+' — check the key at aistudio.google.com';
+    document.getElementById('ai-status').textContent='uplink failed: '+e.message+' — check the key/model at aistudio.google.com';
     showToast('Uplink test failed');
   }
 }
@@ -1599,7 +2223,7 @@ function ringSet(id, frac){
   document.getElementById(id).style.strokeDashoffset = C - C*Math.max(0,Math.min(1,frac));
 }
 /* Sparky doesn't talk — beeps, chimes, wing-flutters only. These lines narrate him. */
-const SPARKY_LINES={
+let SPARKY_LINES={
   0:['Two bright chimes — the all-clear. He polishes his front legs for no reason.','A contented idle hum. The station feed is clean today and he knows it.','He taps the shelf twice: the "you promised me a new capacitor" reminder. He remembers everything.'],
   1:['A short static-warning click. One lens stays fixed on the deck feed.','He hovers closer than usual and offers a soft, questioning chirp. Rations? Nap? Both?','He ran his self-check twice. The second one was just for comfort.'],
   2:['Low, uneasy triple-clicks. The feed is getting worse and he knows you know.','His wings half-open at nothing. He keeps swiveling toward the low channels.','An insistent chime against your wrist: log the goals. The station notices. He can hear it noticing.'],
@@ -1607,7 +2231,7 @@ const SPARKY_LINES={
 };
 /* Deck card content: Katie's official directives + overheard Rook encounters.
    Rook pool depends on whether he's noticed the thefts yet (rookDays). */
-const KATIE_DIRECTIVES=[
+let KATIE_DIRECTIVES=[
   'Hold all three goals today and the deck lights stay warm. Administrator\'s orders.',
   'Security asks residents to log psych evals daily. Unstable minds hear the walls.',
   'Ration hall special: dumpling synth-broth. Wagner says you WILL eat.',
@@ -1619,7 +2243,7 @@ const KATIE_DIRECTIVES=[
   'Wagner memo: maintenance keeps finding grease handprints in vents too small for the maintenance crew. Whoever you are — eat something.',
   'A fruit shipment actually made it in. Real fruit. Limit posted by the administrator: two per resident. KOKO. TWO.',
 ];
-const ROOK_UNOBSERVED=[
+let ROOK_UNOBSERVED=[
   'From the vent above bay twelve: Rook argued with his coffee machine for six minutes. The coffee machine won. Log nothing.',
   'You watched him recalibrate the same thruster three times today. He hums while he works when he thinks nobody\'s listening. Badly.',
   'One protein tin liberated from the Peregrine\'s hold. He has hundreds. He\'ll never notice. Sparky logged it as "salvage".',
@@ -1628,7 +2252,7 @@ const ROOK_UNOBSERVED=[
   'He fell asleep in the pilot seat again, boots on the console. You dimmed the bay lights from the maintenance panel. He didn\'t wake.',
   'His port thruster whines a quarter-tone flat. It\'s driving you insane. One night. One wrench. He\'d never even know.',
 ];
-const ROOK_SUSPICIOUS=[
+let ROOK_SUSPICIOUS=[
   'Overheard at bay twelve: "THIRD tin this month. Either this station has rats, or the rats have a TOOLKIT."',
   'Rook has started chalking tally marks on his cargo crates. You have started memorizing the marks.',
   'He filed a theft report. Item: one coil of mag-wire. Suspect description: "small, fast, possibly imaginary." Katie framed it.',
@@ -1637,14 +2261,14 @@ const ROOK_SUSPICIOUS=[
   'Someone fixed his flat port thruster in the night. He spent the morning glaring at it. It purrs now. He hates how much he doesn\'t hate it.',
   'He left one protein tin on top of the cargo stack tonight. Just one. Set apart. Almost like bait. Almost like an offering. Take it.',
 ];
-const GARY_BOASTS=[
+let GARY_BOASTS=[
   'Overheard at the gym: Gary telling dock workers he once took a skip in zero-g "with one boot off". The boot count changes every telling.',
   'Gary, to an audience of three loaders: "Tracked him through an asteroid field. Blindfolded." Sparky ran the math. No.',
   'Today\'s version of the Meridian story has TWO plasma storms. Last week it had one. You are keeping a chart.',
   'He recited his bounty count at the noodle stand. It has gone up by four since Tuesday. Nobody checks. You check.',
   'Overheard: "Fear? Never met her." He then jumped at a pressure valve. You did not laugh. Audibly.',
 ];
-const GARY_HONEST=[
+let GARY_HONEST=[
   'From the vent above berth nine: Gary, alone, patching a burn on his jacket. Quietly: "...half a second slower and that was it."',
   'He sat in his cutter with the engines off for an hour tonight. Muttered something about his mother\'s kitchen. Then ran pre-flight checks twice.',
   'Alone at the wanted board, he touched one poster and said "not this one" to nobody. He looked tired. You didn\'t log why you stayed.',
@@ -1654,19 +2278,19 @@ const GARY_HONEST=[
 function pickDirective(s, d){
   const seed = d.getDate()+d.getMonth();
   const rookPool = s.rookDays>0 ? ROOK_SUSPICIOUS : ROOK_UNOBSERVED;
-  const rookLabel = s.rookDays>0 ? '▸ BAY TWELVE // HE\'S COUNTING NOW' : '▸ BAY TWELVE // UNOBSERVED';
+  const rookLabel = s.rookDays>0 ? (LBL.deckStowawaySusp||'▸ BAY TWELVE // HE\'S COUNTING NOW') : (LBL.deckStowawayUnobs||'▸ BAY TWELVE // UNOBSERVED');
   // three-day rotation: Wagner's board / bay-twelve snooping / deck-six eavesdropping
   const slot = d.getDate()%3;
   if(slot===2 && s.garyDocked){
-    // journaling = paying attention: enough entries and Koko starts catching the honest moments
+    // journaling = paying attention: enough entries and the honest moments start landing
     const pool = s.jDays>=5 ? GARY_HONEST : GARY_BOASTS;
-    const label = s.jDays>=5 ? '▸ DECK SIX // WHEN HE THINKS NO ONE\'S LISTENING' : '▸ DECK SIX // THE BOUNTY HUNTER HOLDS COURT';
+    const label = s.jDays>=5 ? (LBL.deckGaryHonest||'▸ DECK SIX // WHEN HE THINKS NO ONE\'S LISTENING') : (LBL.deckGaryBoast||'▸ DECK SIX // THE BOUNTY HUNTER HOLDS COURT');
     return {label, text:pool[seed%pool.length]};
   }
   if(slot===1){
     return {label:rookLabel, text:rookPool[seed%rookPool.length]};
   }
-  return {label:'▸ STATION DIRECTIVE // WAGNER', text:KATIE_DIRECTIVES[seed%KATIE_DIRECTIVES.length]};
+  return {label:(LBL.deckDirective||'▸ STATION DIRECTIVE // WAGNER'), text:KATIE_DIRECTIVES[seed%KATIE_DIRECTIVES.length]};
 }
 function render(){
   today = loadDay(todayKey());
@@ -1711,7 +2335,7 @@ function render(){
     fn.textContent='Filed. Exertion logs are audited against this claim at day\'s end. Tap to amend.';
   } else {
     fs.textContent='NOT FILED'; fs.style.color='var(--amber)';
-    fn.textContent='Sparky is waiting for today\'s exercise forecast. It books your ration limit. Tap to file.';
+    fn.textContent=LBL.forecastNote;
   }
   // morning audit of yesterday's claim (once per day)
   if(meta.lastReview!==todayKey()){
@@ -1744,6 +2368,18 @@ function render(){
   document.getElementById('sub-kcal').textContent = '/ '+L+' kcal'+(today.forecast!=null?' · '+FORECAST[today.forecast].name:'');
   document.getElementById('val-move').textContent = effMove(today)+'m';
   document.getElementById('sub-move').textContent = '/ '+meta.cfg.move+' min'+((today.fbMove||0)>(today.move||0)?' ⌚':'');
+  const stEl=document.getElementById('val-steps');
+  if(stEl) stEl.textContent = (today.steps>0) ? ('👣 '+today.steps.toLocaleString()+' steps') : '';
+  const bnEl=document.getElementById('val-burn');
+  if(bnEl) bnEl.textContent = (today.burnKcal>0) ? ('🔥 '+today.burnKcal.toLocaleString()+' cal burned') : '';
+  const cbn=document.getElementById('convo-btn-name');
+  if(cbn) cbn.textContent = LBL.companionName || 'the station';
+  const slEl=document.getElementById('val-sleep');
+  if(slEl) slEl.textContent = (today.sleepMin>0) ? ('😴 '+sleepHours(today.sleepMin)+'h sleep') : '';
+  const rcEl=document.getElementById('val-recovery');
+  if(rcEl){ const parts=[]; if(today.restHR>0) parts.push('❤️ '+today.restHR+' rhr'); if(today.hrv>0) parts.push('〰️ '+today.hrv+'ms hrv'); rcEl.textContent=parts.join(' · '); }
+  const cyEl=document.getElementById('val-cycle');
+  if(cyEl) cyEl.textContent = cycleLine();
   document.getElementById('val-mind').textContent = today.mood>0?['','🌑','🌘','🌗','🌔','🌕'][today.mood]:'—';
   setMet('met-kcal', goalKcal(today)); setMet('met-move', goalMove(today)); setMet('met-mind', goalMind(today));
 
@@ -1860,7 +2496,7 @@ function vnNext(){
 function closeVN(){ document.getElementById('vn-overlay').classList.remove('open'); render(); }
 
 /* crew */
-const CREW=[
+let CREW=[
   {id:'sparky', icon:'🕷️', name:'SPARKY', role:'Companion drone // Koko built him from scraps', color:'#7ec8ff',
    stat:'mindDays', per:10, hint:'He doesn\'t talk — only beeps, chimes and wing-flutters. Psych evals keep his signal warm.'},
   {id:'rook', icon:'🚬', name:'HENRY ROOK', role:'Captain, the Peregrine // not yet met', color:'#e08a4a',
@@ -1927,7 +2563,7 @@ function renderRecords(s, sig){
     ['FALSE MANIFESTS', st.manifests, 'forecasts vs what actually happened'],
   ];
   document.getElementById('strain-wrap').innerHTML =
-    '<div class="chart-card"><div class="chart-title">Strain — Sparky\'s worry ledger (14 cycles)</div>'
+    '<div class="chart-card"><div class="chart-title">'+LBL.strainTitle+'</div>'
     + srows.map(r=>`<div style="margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:1.5px;">
           <span>${r[0]}</span><span style="color:${scol(r[1])}">${['LOW','ELEVATED','HIGH'][strainLevel(r[1])]}</span>
@@ -1940,6 +2576,44 @@ function renderRecords(s, sig){
     const un=meta.ach.includes(a.id);
     return `<div class="ach-card ${un?'unlocked':'locked'}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-cond">${a.cond}</div></div>`;
   }).join('');
+  renderHistory();
+}
+/* Full per-day history: every stored cycle, newest first, with logged + tracker data. */
+function renderHistory(){
+  const el=document.getElementById('history-log'); if(!el) return;
+  const MOON=['','🌑','🌘','🌗','🌔','🌕'];
+  const rows=[];
+  for(let i=0;i<400;i++){
+    const k=keyOffset(i);
+    if(!localStorage.getItem('ksd_day_'+k)) continue;
+    const d=loadDay(k);
+    const n=goalsMet(d);
+    const dot=n===3?'var(--teal)':n===2?'var(--amber)':n===1?'#8a5f22':'#39454d';
+    const dObj=new Date(k+'T00:00:00');
+    const dateLbl=dObj.toLocaleDateString(undefined,{weekday:'short', day:'numeric', month:'short'})+(i===0?' · today':i===1?' · yesterday':'');
+    const chips=[];
+    if(d.kcal>0) chips.push('🍜 '+d.kcal+' kcal');
+    const mv=effMove(d); if(mv>0) chips.push('🔧 '+mv+'m'+((d.fbMove||0)>(d.move||0)?'⌚':''));
+    if(d.steps>0) chips.push('👣 '+d.steps.toLocaleString());
+    if(d.burnKcal>0) chips.push('🔥 '+d.burnKcal.toLocaleString()+'cal');
+    if(d.restHR>0) chips.push('❤️ '+d.restHR);
+    if(d.hrv>0) chips.push('〰️ '+d.hrv+'ms');
+    if(d.sleepMin>0) chips.push('😴 '+sleepHours(d.sleepMin)+'h');
+    const cyc=cyclePhase(k); if(cyc) chips.push(cyc.icon+' '+cyc.name);
+    if(d.mood>0) chips.push(MOON[d.mood]+' mood '+d.mood);
+    if(d.careSkin&&d.careTeeth) chips.push('🧴 care');
+    else if(d.careSkin||d.careTeeth) chips.push('🧴 half');
+    if(d.forecast!=null) chips.push('▸ '+(FORECAST[d.forecast]?FORECAST[d.forecast].name:'forecast'));
+    const jr=(d.journal||'').trim();
+    rows.push(`<div class="hist-row">
+      <div class="hist-head"><span class="hist-dot" style="background:${dot}"></span>
+        <span class="hist-date">${dateLbl}</span>
+        <span class="hist-goals">${n}/3</span></div>
+      ${chips.length?('<div class="hist-chips">'+chips.map(c=>'<span class="hist-chip">'+c+'</span>').join('')+'</div>'):'<div class="hist-chips"><span class="hist-empty">nothing logged</span></div>'}
+      ${jr?('<div class="hist-journal">\u201c'+jr.replace(/</g,'&lt;').slice(0,160)+'\u201d</div>'):''}
+    </div>`);
+  }
+  el.innerHTML = rows.length ? rows.join('') : '<div class="crew-hint" style="padding:8px 2px;">no cycles logged yet — your history will build here.</div>';
 }
 function checkAch(s){
   let newly=[];
@@ -1975,7 +2649,7 @@ function closeForecast(e){ if(e && e.target!==e.currentTarget)return; document.g
 
 /* ═══════════════ LOGGING ═══════════════ */
 let logType='meal', pickedMood=0;
-const LOG_COPY={
+let LOG_COPY={
   meal:{t:'LOG RATIONS', s:'Real meals, real schedule. What did you eat? (kcal)'},
   move:{t:'LOG EXERTION', s:'Deck work, gym, walking the causeways — active minutes.'},
   mind:{t:'PSYCH EVAL', s:'How\'s the signal in your head today? Be honest. Sparky worries.'},
@@ -1986,7 +2660,11 @@ function openLog(type){
   document.getElementById('log-title').textContent=LOG_COPY[type].t;
   document.getElementById('log-sub').textContent=LOG_COPY[type].s;
   ['meal','move','mind','care'].forEach(t=>document.getElementById('log-'+t+'-body').style.display = t===type?'block':'none');
-  if(type==='meal')document.getElementById('log-kcal-input').value='';
+  if(type==='meal'){
+    document.getElementById('log-kcal-input').value='';
+    document.getElementById('food-ai-input').value='';
+    document.getElementById('food-ai-out').innerHTML='';
+  }
   if(type==='move')document.getElementById('log-move-input').value='';
   if(type==='care'){
     document.getElementById('care-skin').classList.toggle('sel', !!today.careSkin);
@@ -1995,6 +2673,13 @@ function openLog(type){
   if(type==='mind'){
     document.getElementById('log-journal-input').value=today.journal||'';
     document.querySelectorAll('.mood-btn').forEach(b=>b.classList.toggle('sel', +b.dataset.m===pickedMood));
+    const hint=document.getElementById('mind-sleep-hint');
+    if(hint){
+      let hh=sleepHint(today.sleepMin);
+      const c=cyclePhase();
+      if(c) hh += '<br><span style="color:#e07a9e">'+c.icon+' Cycle day '+c.day+' · '+c.name+'</span> <span style="color:var(--text-dim)">— '+c.note+'. (estimate)</span>';
+      hint.innerHTML = hh;
+    }
   }
   document.getElementById('log-modal').classList.add('open');
 }
@@ -2018,7 +2703,7 @@ function confirmLog(){
   } else {
     if(!pickedMood){showToast('Pick a mood first');return;}
     today.mood=pickedMood; today.journal=document.getElementById('log-journal-input').value||'';
-    showToast('🧠 Psych eval transmitted. Sparky approves.');
+    showToast(LBL.psychToast);
   }
   const m = pickMoment(logType);   // may set once-per-day flags on today.mFlags
   if(m){
@@ -2027,10 +2712,102 @@ function confirmLog(){
     today.moments=today.moments.slice(-8);
   }
   saveDay(todayKey(), today);
+  if(navigator.vibrate) navigator.vibrate(8);   // subtle haptic on log confirm
   closeLog(); render();
   if(m) setTimeout(()=>playMoment(m[0], m[1]), 350);
 }
 function closeLog(e){ if(e && e.target!==e.currentTarget)return; document.getElementById('log-modal').classList.remove('open'); }
+
+/* ═══════════════ CONVERSATIONAL LOGGER ═══════════════
+   Multi-turn: the AI asks clarifying questions when a meal/activity is vague
+   ("tomato salad" → "how many tomatoes? any cheese or dressing?"), and only
+   logs once it has enough. The result stays on screen until the user dismisses. */
+let convoHistory=[], convoRounds=0, convoDone=false;
+function setConvoBtn(label){ const b=document.getElementById('convo-send'); if(b) b.textContent=label; }
+function openConvo(){
+  convoHistory=[]; convoRounds=0; convoDone=false;
+  document.getElementById('convo-input').value='';
+  document.getElementById('convo-out').innerHTML='';
+  document.getElementById('convo-input').placeholder='e.g. jogged 30 minutes, two eggs and toast, feeling good today';
+  setConvoBtn('✧ Log it');
+  document.getElementById('convo-title').textContent='TELL '+((LBL.companionName||'THE STATION').toUpperCase());
+  document.getElementById('convo-modal').classList.add('open');
+  setTimeout(()=>{ try{ document.getElementById('convo-input').focus(); }catch(e){} }, 100);
+}
+function closeConvo(e){ if(e && e.target!==e.currentTarget)return; document.getElementById('convo-modal').classList.remove('open'); }
+function convoName(){ return LBL.companionName || 'STATION'; }
+async function sendConvo(){
+  // once a log is finalised, the button becomes a manual dismiss
+  if(convoDone){ document.getElementById('convo-modal').classList.remove('open'); return; }
+  const q=(document.getElementById('convo-input').value||'').trim();
+  const out=document.getElementById('convo-out');
+  if(!q){ showToast('Tell me what you did first'); return; }
+  if(!aiReady()){
+    out.innerHTML = meta.cfg.aiKey
+      ? '<span style="color:var(--amber)">Offline — use the log buttons above instead.</span>'
+      : '<span style="color:var(--amber)">Add a free Gemini key in ⚙ System to log by talking.</span>';
+    return;
+  }
+  convoHistory.push({role:'user', text:q});
+  const transcript=convoHistory.map(t=>(t.role==='user'?'User: ':'You: ')+t.text).join('\n');
+  out.textContent='◈ thinking…';
+  document.getElementById('convo-input').value='';
+  try{
+    const b=await aiCallSys(
+      'Conversation so far:\n'+transcript+'\n\n'
+      +'This is clarification round '+convoRounds+' (0 = first message). '
+      +'If key details needed to estimate the calories are missing (quantity, main ingredients, cooking method, dressing/oil/cheese), ask ONE short friendly question that bundles the unknowns, and set mode to "ask". '
+      +'If you already have enough — OR round is 2 or higher, OR the user says they don\'t know / to just estimate — set mode to "log" with your best estimate. '
+      +'For a log: estimate total food kcal, sum exercise into active MINUTES, detect skincare and teeth-brushing separately, and a mood 1-5 only if clearly stated (else null). '
+      +'Return EXACTLY this JSON: {"mode":"ask"|"log","reply":"your question OR a one-line confirmation, max 25 words","kcal":0,"moveMin":0,"careSkin":false,"careTeeth":false,"mood":null,"journal":"short quote of their feeling or null"}. '
+      +'Use 0/false/null for anything not mentioned.',
+      'You are a warm, practical food & activity logging assistant for a health app. You may ask brief clarifying questions to estimate calories accurately, but never more than twice, and never nag. Return valid JSON only.',
+      0.3,
+      activeModel()
+    );
+    if(!b || typeof b!=='object') throw new Error('bad shape');
+    const reply=(b.reply?String(b.reply):'');
+
+    if(b.mode==='ask' && convoRounds<2){
+      convoRounds++;
+      convoHistory.push({role:'assistant', text:reply});
+      out.innerHTML='<span style="color:var(--teal)">'+convoName()+' ⟩</span> '+reply;
+      document.getElementById('convo-input').placeholder='your answer…';
+      setConvoBtn('✧ Send answer');
+      setTimeout(()=>{ try{ document.getElementById('convo-input').focus(); }catch(e){} }, 80);
+      return;
+    }
+
+    // finalise: apply deltas
+    const kcal=Math.max(0, Math.round(+b.kcal||0));
+    const mv=Math.max(0, Math.round(+b.moveMin||0));
+    const parts=[];
+    if(kcal>0){ today.kcal+=kcal; lastLogVal=kcal; parts.push('🍜 +'+kcal+' kcal'); }
+    if(mv>0){ today.move+=mv; lastLogVal=mv; parts.push('🔧 +'+mv+' min'); }
+    if(b.careSkin===true){ today.careSkin=true; parts.push('🧴 skin'); }
+    if(b.careTeeth===true){ today.careTeeth=true; parts.push('🪥 teeth'); }
+    if(b.mood!=null && +b.mood>=1 && +b.mood<=5){ today.mood=Math.round(+b.mood); parts.push('🧠 mood '+today.mood); }
+    if(b.journal && String(b.journal).trim() && !String(b.journal).toLowerCase().includes('null')){
+      today.journal=(today.journal?today.journal+' ':'')+String(b.journal).trim();
+    }
+    if(!parts.length){
+      out.innerHTML='<span style="color:var(--amber)">Nothing to log there — try naming a meal, exercise, care or how you feel.</span>';
+      convoHistory.push({role:'assistant', text:reply});
+      setConvoBtn('✧ Log it');
+      return;
+    }
+    saveDay(todayKey(), today);
+    out.innerHTML='<b style="color:var(--teal)">Logged:</b> '+parts.join(' · ')
+      +(reply?('<br><span style="color:var(--text-dim)">'+convoName()+' ⟩ '+reply+'</span>'):'');
+    render();
+    showToast('✧ Logged: '+parts.join(' · '));
+    convoDone=true;
+    setConvoBtn('✓ Done — close');
+  }catch(e){
+    out.innerHTML='<span style="color:var(--danger)">Couldn\'t parse that ('+(e&&e.message||e)+') — use the log buttons above.</span>';
+    setConvoBtn('✧ Log it');
+  }
+}
 
 /* ═══════════════ MISC ═══════════════ */
 function switchTab(tab){
@@ -2051,9 +2828,36 @@ function saveCfg(){
   meta.cfg.kcal=Math.max(800,+document.getElementById('cfg-kcal').value||2000);
   meta.cfg.move=Math.max(5,+document.getElementById('cfg-move').value||30);
   meta.cfg.horror=document.getElementById('cfg-horror').checked;
+  const _remWas=meta.cfg.remind, _amWas=meta.cfg.remindAM, _midWas=meta.cfg.remindMid, _pmWas=meta.cfg.remindPM;
+  meta.cfg.remind=document.getElementById('cfg-remind').checked;
+  meta.cfg.remindAM=document.getElementById('cfg-remind-am').value||'09:00';
+  meta.cfg.remindMid=document.getElementById('cfg-remind-mid').value||'15:00';
+  meta.cfg.remindPM=document.getElementById('cfg-remind-pm').value||'20:00';
   meta.cfg.aiKey=document.getElementById('cfg-aikey').value.trim();
+  meta.cfg.aiModel=document.getElementById('cfg-aimodel').value.trim();
   meta.cfg.fbId=document.getElementById('cfg-fbid').value.trim();
+  meta.cfg.cycleTrack=document.getElementById('cfg-cycle').checked;
+  meta.cfg.cycleLen=Math.max(20,Math.min(45,+document.getElementById('cfg-cyclelen').value||28));
+  meta.cfg.periodLen=Math.max(2,Math.min(10,+document.getElementById('cfg-periodlen').value||5));
+  document.getElementById('cycle-opts').style.display = meta.cfg.cycleTrack ? 'block' : 'none';
+  document.getElementById('remind-times').style.display = meta.cfg.remind ? 'flex' : 'none';
+  updateCycleStatus();
   saveMeta(meta); fbStatus(); render(); showToast('⚙ Configuration saved');
+  if(meta.cfg.remind!==_remWas || meta.cfg.remindAM!==_amWas || meta.cfg.remindMid!==_midWas || meta.cfg.remindPM!==_pmWas) notifReschedule();
+}
+function setCycleStart(v){
+  const d = (v==='today') ? todayKey() : v;
+  if(!d){ return; }
+  meta.cycleStart=d; saveMeta(meta);
+  const inp=document.getElementById('cfg-cyclestart'); if(inp) inp.value=d;
+  updateCycleStatus(); render();
+  showToast('🩸 Period start set — '+d);
+}
+function updateCycleStatus(msg){
+  const el=document.getElementById('cycle-status'); if(!el) return;
+  if(msg){ el.textContent=msg; return; }
+  const c=cyclePhase();
+  el.textContent = c ? ('now: '+c.icon+' day '+c.day+' · '+c.name+' — '+c.note) : 'set the first day of your last period';
 }
 /* testing helper: shift ALL dated records one day into the past, so "today"
    starts fresh — a simulated night-cycle without waiting for midnight */
@@ -2095,7 +2899,7 @@ function wipeData(){
 }
 
 /* ═══════════════ BOOT ═══════════════ */
-const BOOT_LINES=[
+let BOOT_LINES=[
   '> KSD TERMINAL 7-G // salvage boot v0.9',
   '> auth ........ BYPASSED (nice work, koko)',
   '> station feed ........ CONNECTED',
@@ -2117,9 +2921,19 @@ function finishBoot(){
   meta.booted=true; saveMeta(meta);
   render();
 }
-/* PWA: register the service worker (skipped on file:// where SWs aren't available).
-   When a new version activates, reload once automatically — no manual double-refresh. */
-if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+/* Service worker policy:
+   - Native (Capacitor) app: DON'T use a service worker at all. Capacitor already
+     serves the bundled assets locally and works offline; a SW only causes stale-HTML
+     traps across APK updates. Actively unregister any leftover SW + clear its caches.
+   - Web / PWA: register the SW (now network-first for HTML), and auto-reload on update. */
+if(isNative()){
+  try{
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(rs=>{ rs.forEach(r=>{ try{r.unregister();}catch(e){} }); }).catch(()=>{});
+    }
+    if(window.caches){ caches.keys().then(ks=>ks.forEach(k=>{ try{caches.delete(k);}catch(e){} })).catch(()=>{}); }
+  }catch(e){}
+} else if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').then(reg=>{ try{reg.update();}catch(e){} }).catch(()=>{});
   // only auto-reload on an UPDATE (page was already controlled), never on first install
   const swHadController = !!navigator.serviceWorker.controller;
@@ -2132,13 +2946,186 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   });
 }
 
+let LBL={companionName:'SPARKY',forecastNote:"Sparky is waiting for today's exercise forecast. It books your ration limit. Tap to file.",forecastAsk:'SPARKY: "How much exercise will be done today, Koko?" — this books your ration limit. In between two? The station always books the lower ration.',psychToast:'🧠 Psych eval transmitted. Sparky approves.',strainTitle:"Strain — Sparky's worry ledger (14 cycles)",AI:{momentsIntro:'Moments Koko already lived today (small scenes that happened — reference them where natural): ',journalIntro:'Koko\'s latest journal line (weave it in subtly where fitting): ',relationSus:'Rook has noticed things going missing from his hold and is suspicious. ',relationUnobs:'Rook has no idea Koko watches him from the vents and pilfers his cargo. ',companionArrays:'The "sparky" arrays are third-person narrations of the companion drone Sparky. Sparky CANNOT speak or hold conversation — in these arrays never write dialogue, sentences or quotes as his words; describe ONLY his beeps, chimes, wing-flutters, lamp and body language and what he is TRYING to communicate, and let the narrator interpret it in prose. (His one exception is the rare, desperate "SPARKY\u27e9 ..." emergency text transmission — that belongs ONLY in the whispers array, never here.) ',whisperSrc:'each either a SPARKY⟩ transmission or impersonal station-system text',daylogSpeakers:'narr, koko',daylogAllowed:['narr','koko'],logbookOwner:'Koko',sceneCompanionNote:'Sparky never gets a speaker slot — narrate him via "narr".',sceneSpeakers:['narr','koko','rook','katie','gary','other','horror']}};
+function setPov(v){ localStorage.setItem('ksd_pov', v); location.reload(); }
+/* ═══════════════ THEME (8-bit cute vs dark station) ═══════════════ */
+function themePref(){ return localStorage.getItem('ksd_theme')||'auto'; }
+function applyTheme(){
+  const pov=window.__POV||localStorage.getItem('ksd_pov')||'koko';
+  const pref=themePref();
+  const mode = pref==='auto' ? (pov==='koko'?'bubbly':'dark') : pref;
+  document.body.classList.toggle('bubbly', mode==='bubbly');
+  document.body.classList.toggle('cozy', mode==='bubbly');
+  document.body.classList.toggle('modern', mode==='modern');
+}
+function setTheme(v){ localStorage.setItem('ksd_theme', v); applyTheme(); var s=document.getElementById('cfg-theme'); if(s)s.value=v; if(typeof render==='function') render(); }
+/* ═══════════════ SPARKY: pet + idle wander ═══════════════ */
+let _petCount=0, _wanderTimer=null, _idleAt=Date.now(), _sprite=null;
+/* ── 8-bit sprite-sheet Sparky · graceful: falls back to inline SVG until sparky-sheet.png exists ── */
+window.SPX={ok:false,path:'sparky-sheet.png'};
+function probeSprite(){
+  const img=new Image();
+  img.onload=()=>{ if(!img.naturalWidth) return; SPX.ok=true; document.body.classList.add('spx-ready'); mountOrbSprite(); };
+  img.onerror=()=>{ SPX.ok=false; document.body.classList.remove('spx-ready'); };
+  img.src=SPX.path+'?v='+Date.now();
+}
+function mountOrbSprite(){
+  const orb=document.getElementById('sparky-orb'); if(!orb || orb.querySelector('.spx')) return;
+  const s=document.createElement('div'); s.className='spx idle'; orb.appendChild(s);
+}
+function setSparkyState(state,ms){
+  if(!SPX.ok) return;
+  const orbSpx=document.querySelector('#sparky-orb .spx'); if(!orbSpx) return;
+  orbSpx.classList.remove('idle','walk','happy','alert'); orbSpx.classList.add(state);
+  if(ms){ clearTimeout(window._spxT); window._spxT=setTimeout(()=>setSparkyState('idle'),ms); }
+}
+window.sparkyAlert=(ms)=>setSparkyState('alert',ms||1400);
+function petSparky(){
+  const orb=document.getElementById('sparky-orb'); if(!orb) return;
+  _petCount++;
+  orb.classList.remove('petted'); void orb.offsetWidth; orb.classList.add('petted');
+  const line=document.getElementById('sparky-line');
+  if(line){
+    const joy=['A delighted three-note trill. His wings buzz double-time.','He leans into your finger and chimes, warm and low.','A happy spin! Lamp flashes gold twice.','He does a tiny hop and plays his favourite two-note tune.','Contented purring beeps. He has decided this is the best deck.'];
+    line.textContent=joy[_petCount % joy.length];
+  }
+  spawnHeart(orb);
+  setSparkyState('happy',1300);
+  bumpIdle();
+}
+function spawnHeart(orb){
+  const r=orb.getBoundingClientRect();
+  const h=document.createElement('div'); h.className='pet-heart'; h.textContent='\u2665';
+  h.style.left=(r.left+r.width/2)+'px'; h.style.top=(r.top)+'px';
+  document.body.appendChild(h);
+  setTimeout(()=>h.remove(), 900);
+}
+function bumpIdle(){ _idleAt=Date.now(); if(_sprite){ _sprite.remove(); _sprite=null; } }
+function sparkySpriteHTML(){
+  return '<svg width="34" height="34" viewBox="0 0 16 16" shape-rendering="crispEdges" class="px-sparky">'
+    +'<rect class="px-ant" x="7" y="1" width="2" height="2" fill="#ffd166"/><rect x="7" y="3" width="2" height="1" fill="#3aa892"/>'
+    +'<g class="px-wingL"><rect x="1" y="6" width="2" height="3" fill="#c9a4ff"/></g>'
+    +'<g class="px-wingR"><rect x="13" y="6" width="2" height="3" fill="#c9a4ff"/></g>'
+    +'<rect x="4" y="5" width="8" height="6" fill="#0a201b" stroke="#4ef2c8" stroke-width="0.5"/>'
+    +'<g class="px-eyes"><rect x="6" y="7" width="1" height="2" fill="#4ef2c8"/><rect x="9" y="7" width="1" height="2" fill="#4ef2c8"/></g>'
+    +'<rect x="5" y="11" width="1" height="2" fill="#3aa892"/><rect x="7" y="11" width="1" height="2" fill="#3aa892"/><rect x="8" y="11" width="1" height="2" fill="#3aa892"/><rect x="10" y="11" width="1" height="2" fill="#3aa892"/>'
+    +'</svg>';
+}
+function sparkyWander(){
+  if(document.hidden) return;
+  const onDeck=document.getElementById('screen-deck') && document.getElementById('screen-deck').classList.contains('active');
+  if(!onDeck || Date.now()-_idleAt < 20000){ if(_sprite){ _sprite.remove(); _sprite=null; } return; }
+  if(!_sprite){
+    _sprite=document.createElement('div'); _sprite.className='sparky-sprite'; _sprite.innerHTML = (window.SPX&&SPX.ok) ? '<div class="spx walk"></div>' : sparkySpriteHTML();
+    _sprite.title='pet me!'; _sprite.onclick=()=>{ petSparky(); };
+    document.body.appendChild(_sprite);
+    _sprite.style.top=(window.innerHeight-150)+'px'; _sprite.style.left='10px';
+  }
+  const x=Math.random()*(window.innerWidth-50)+5;
+  const y=window.innerHeight-120-Math.random()*220;
+  const cur=parseFloat(_sprite.style.left)||10;
+  _sprite.style.transform='scaleX('+(x<cur?-1:1)+')';
+  _sprite.style.transition='left 2.6s steps(13), top 2.6s steps(13)';
+  _sprite.style.left=x+'px'; _sprite.style.top=y+'px';
+  const wspx=_sprite.querySelector('.spx');
+  if(wspx){ wspx.classList.remove('idle'); wspx.classList.add('walk'); clearTimeout(_sprite._settle); _sprite._settle=setTimeout(()=>{ wspx.classList.remove('walk'); wspx.classList.add('idle'); },2600); }
+}
+function startWander(){
+  ['click','keydown','touchstart','scroll'].forEach(ev=>document.addEventListener(ev, bumpIdle, {passive:true}));
+  if(_wanderTimer) clearInterval(_wanderTimer);
+  _wanderTimer=setInterval(sparkyWander, 3000);
+}
+function applyPerspective(pov){
+  window.__POV=pov;
+  applyTheme();
+  if(pov!=='rook' || !window.ROOK_LORE) return;
+  const R=window.ROOK_LORE;
+  if(R.LBL) LBL=Object.assign({},LBL,R.LBL);
+  if(R.FORECAST!==undefined) FORECAST=R.FORECAST;
+  if(R.TIER_INFO!==undefined) TIER_INFO=R.TIER_INFO;
+  if(R.HORROR_MSGS!==undefined) HORROR_MSGS=R.HORROR_MSGS;
+  if(R.CHAPTERS!==undefined) CHAPTERS=R.CHAPTERS;
+  if(R.SPEAKERS!==undefined) SPEAKERS=R.SPEAKERS;
+  if(R.GARY_EVENTS!==undefined) GARY_EVENTS=R.GARY_EVENTS;
+  if(R.DL_OPEN!==undefined) DL_OPEN=R.DL_OPEN;
+  if(R.DL_EAT_MET!==undefined) DL_EAT_MET=R.DL_EAT_MET;
+  if(R.DL_EAT_NONE!==undefined) DL_EAT_NONE=R.DL_EAT_NONE;
+  if(R.DL_MOVE_MET!==undefined) DL_MOVE_MET=R.DL_MOVE_MET;
+  if(R.DL_MIND_HIGH!==undefined) DL_MIND_HIGH=R.DL_MIND_HIGH;
+  if(R.DL_CARE_MET!==undefined) DL_CARE_MET=R.DL_CARE_MET;
+  if(R.DL_AUDIT_FAIL!==undefined) DL_AUDIT_FAIL=R.DL_AUDIT_FAIL;
+  if(R.DL_CLOSE!==undefined) DL_CLOSE=R.DL_CLOSE;
+  if(R.M_MEAL_FIRST!==undefined) M_MEAL_FIRST=R.M_MEAL_FIRST;
+  if(R.M_MEAL_BIG!==undefined) M_MEAL_BIG=R.M_MEAL_BIG;
+  if(R.M_MEAL_SNACK!==undefined) M_MEAL_SNACK=R.M_MEAL_SNACK;
+  if(R.M_MEAL_OVER!==undefined) M_MEAL_OVER=R.M_MEAL_OVER;
+  if(R.M_MOVE_LIGHT!==undefined) M_MOVE_LIGHT=R.M_MOVE_LIGHT;
+  if(R.M_MOVE_GOOD!==undefined) M_MOVE_GOOD=R.M_MOVE_GOOD;
+  if(R.M_MOVE_HEAVY!==undefined) M_MOVE_HEAVY=R.M_MOVE_HEAVY;
+  if(R.M_MOVE_GOAL!==undefined) M_MOVE_GOAL=R.M_MOVE_GOAL;
+  if(R.M_MIND_ANXIETY!==undefined) M_MIND_ANXIETY=R.M_MIND_ANXIETY;
+  if(R.M_MIND_DARK!==undefined) M_MIND_DARK=R.M_MIND_DARK;
+  if(R.M_MIND_MID!==undefined) M_MIND_MID=R.M_MIND_MID;
+  if(R.M_MIND_BRIGHT!==undefined) M_MIND_BRIGHT=R.M_MIND_BRIGHT;
+  if(R.M_CARE_FULL!==undefined) M_CARE_FULL=R.M_CARE_FULL;
+  if(R.M_CARE_HALF!==undefined) M_CARE_HALF=R.M_CARE_HALF;
+  if(R.S_NERVES!==undefined) S_NERVES=R.S_NERVES;
+  if(R.S_OVER!==undefined) S_OVER=R.S_OVER;
+  if(R.S_UNDER!==undefined) S_UNDER=R.S_UNDER;
+  if(R.S_BURN!==undefined) S_BURN=R.S_BURN;
+  if(R.S_FALSE!==undefined) S_FALSE=R.S_FALSE;
+  if(R.ACH!==undefined) ACH=R.ACH;
+  if(R.STORY_BIBLE!==undefined) STORY_BIBLE=R.STORY_BIBLE;
+  if(R.SPARKY_LINES!==undefined) SPARKY_LINES=R.SPARKY_LINES;
+  if(R.KATIE_DIRECTIVES!==undefined) KATIE_DIRECTIVES=R.KATIE_DIRECTIVES;
+  if(R.ROOK_UNOBSERVED!==undefined) ROOK_UNOBSERVED=R.ROOK_UNOBSERVED;
+  if(R.ROOK_SUSPICIOUS!==undefined) ROOK_SUSPICIOUS=R.ROOK_SUSPICIOUS;
+  if(R.GARY_BOASTS!==undefined) GARY_BOASTS=R.GARY_BOASTS;
+  if(R.GARY_HONEST!==undefined) GARY_HONEST=R.GARY_HONEST;
+  if(R.CREW!==undefined) CREW=R.CREW;
+  if(R.LOG_COPY!==undefined) LOG_COPY=R.LOG_COPY;
+  if(R.BOOT_LINES!==undefined) BOOT_LINES=R.BOOT_LINES;
+  if(R.DL_EAT_OVER!==undefined) DL_EAT_OVER=R.DL_EAT_OVER;
+  if(R.DL_EAT_UNDER!==undefined) DL_EAT_UNDER=R.DL_EAT_UNDER;
+  if(R.DL_MOVE_NONE!==undefined) DL_MOVE_NONE=R.DL_MOVE_NONE;
+  if(R.DL_MIND_MID!==undefined) DL_MIND_MID=R.DL_MIND_MID;
+  if(R.DL_MIND_LOW!==undefined) DL_MIND_LOW=R.DL_MIND_LOW;
+  if(R.DL_MIND_NONE!==undefined) DL_MIND_NONE=R.DL_MIND_NONE;
+  if(R.CHAPTERS_TEXT){ CHAPTERS.forEach(c=>{ const t=R.CHAPTERS_TEXT[c.id]; if(t){ if(t.title)c.title=t.title; if(t.cond)c.cond=t.cond; if(t.scene)c.scene=t.scene; } }); }
+  if(R.GARY_EVENTS_TEXT){ GARY_EVENTS.forEach(c=>{ const t=R.GARY_EVENTS_TEXT[c.id]; if(t){ if(t.title)c.title=t.title; if(t.scene)c.scene=t.scene; } }); }
+  if(R.ACH_TEXT){ ACH.forEach(a=>{ const t=R.ACH_TEXT[a.id]; if(t){ if(t.name)a.name=t.name; if(t.cond)a.cond=t.cond; if(t.icon)a.icon=t.icon; } }); }
+  try{ var cn=document.getElementById('companion-name'); if(cn) cn.textContent=LBL.companionName; }catch(e){}
+  try{ var fa=document.getElementById('forecast-ask'); if(fa) fa.textContent=LBL.forecastAsk; }catch(e){}
+  try{ var fn2=document.getElementById('fc-note'); if(fn2 && today && today.forecast==null) fn2.textContent=LBL.forecastNote; }catch(e){}
+  try{ var sl=document.getElementById('sparky-line'); if(sl && LBL.greeting) sl.textContent=LBL.greeting; }catch(e){}
+  try{ var ls=document.getElementById('logbook-sub'); if(ls && LBL.logbookSub) ls.textContent=LBL.logbookSub; }catch(e){}
+}
+applyPerspective(localStorage.getItem('ksd_pov')||'koko');
+
 document.getElementById('cfg-kcal').value=meta.cfg.kcal;
 document.getElementById('cfg-move').value=meta.cfg.move;
 document.getElementById('cfg-horror').checked=meta.cfg.horror;
+document.getElementById('cfg-remind').checked=!!meta.cfg.remind;
+document.getElementById('cfg-remind-am').value=meta.cfg.remindAM||'09:00';
+document.getElementById('cfg-remind-mid').value=meta.cfg.remindMid||'15:00';
+document.getElementById('cfg-remind-pm').value=meta.cfg.remindPM||'20:00';
 document.getElementById('cfg-aikey').value=meta.cfg.aiKey||'';
+document.getElementById('cfg-aimodel').value=meta.cfg.aiModel||'';
 if(meta.cfg.aiKey) document.getElementById('ai-status').textContent='◈ key stored — narration goes dynamic each new cycle';
 document.getElementById('cfg-fbid').value=meta.cfg.fbId||'';
-fbExtract(); fbStatus(); fbSync();
+document.getElementById('cfg-cycle').checked=!!meta.cfg.cycleTrack;
+document.getElementById('cfg-cyclelen').value=meta.cfg.cycleLen||28;
+document.getElementById('cfg-periodlen').value=meta.cfg.periodLen||5;
+document.getElementById('cfg-cyclestart').value=meta.cycleStart||'';
+document.getElementById('cycle-opts').style.display = meta.cfg.cycleTrack ? 'block' : 'none';
+var _cib=document.getElementById('cycle-import-btn'); if(_cib && isNative() && hcPlugin()) _cib.style.display='block';
+updateCycleStatus();
+var _pv=document.getElementById('cfg-pov'); if(_pv) _pv.value=localStorage.getItem('ksd_pov')||'koko';
+var _th=document.getElementById('cfg-theme'); if(_th) _th.value=themePref();
+startWander();
+probeSprite();
+trackerInit();
+notifInit();
 if(meta.booted){ document.getElementById('boot').classList.add('hidden'); render(); }
 else runBoot();
 </script>
